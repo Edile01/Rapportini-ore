@@ -227,14 +227,25 @@
                             <option value="GESTORE">GESTORE</option>
                         </select>
                     </div>
+                    <div>
+                        <label>Stato Accesso</label>
+                        <select id="admUsrStato">
+                            <option value="ATTIVO">ATTIVO</option>
+                            <option value="DISABILITATO">DISABILITATO</option>
+                        </select>
+                    </div>
                 </div>
                 <div style="display: flex; gap: 8px;">
                     <button class="btn btn-success btn-sm" id="btnSalvaUtente" onclick="adminSalvaUtente()">+ Aggiungi Dipendente</button>
                     <button class="btn btn-secondary btn-sm hidden" id="btnAnnullaUtente" onclick="adminAnnullaModificaUtente()">Annulla</button>
                 </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-top:12px;">
+                    <span style="font-size:0.82rem; color:var(--text-muted);" id="lblConteggioUtenti">Elenco dipendenti</span>
+                    <button type="button" class="btn btn-outline btn-sm" id="btnToggleDisabilitati" onclick="toggleMostraDisabilitati()">👁️ Mostra anche disabilitati</button>
+                </div>
                 <div class="table-container">
                     <table id="admTblUtenti">
-                        <thead><tr><th>Matr.</th><th>Nome</th><th>User / Pass</th><th>Ruolo</th><th style="width: 130px;">Azioni</th></tr></thead>
+                        <thead><tr><th>Matr.</th><th>Nome</th><th>User / Pass</th><th>Ruolo</th><th>Stato</th><th style="width: 185px;">Azioni</th></tr></thead>
                         <tbody></tbody>
                     </table>
                 </div>
@@ -457,6 +468,29 @@
         let editIdxCantiere = -1;
         let editIdxUtente = -1;
         let editIdxLavorazione = -1;
+        let mostraDisabilitatiAdmin = false;
+
+        function isUtenteDisabilitato(u) {
+            return String(u && u.Stato || 'ATTIVO').trim().toUpperCase() === 'DISABILITATO';
+        }
+
+        function toggleMostraDisabilitati() {
+            mostraDisabilitatiAdmin = !mostraDisabilitatiAdmin;
+            const btn = document.getElementById('btnToggleDisabilitati');
+            if (btn) {
+                btn.innerText = mostraDisabilitatiAdmin ? '🙈 Nascondi disabilitati' : '👁️ Mostra anche disabilitati';
+            }
+            aggiornaTabelleAdmin();
+        }
+
+        function adminCambiaStatoUtente(idx) {
+            const u = DB.utenti[idx];
+            if (!u) return;
+            const disab = isUtenteDisabilitato(u);
+            u.Stato = disab ? 'ATTIVO' : 'DISABILITATO';
+            salvaSuCloud();
+            aggiornaTabelleAdmin();
+        }
 
         function pulisciUtentiSistema(lista) {
             return (lista || []).filter(u => {
@@ -712,7 +746,16 @@
             }
 
             if (!utente) {
-                document.getElementById('loginError').classList.remove('hidden');
+                const errEl = document.getElementById('loginError');
+                errEl.innerText = "Credenziali errate o utente non trovato.";
+                errEl.classList.remove('hidden');
+                return;
+            }
+
+            if (isUtenteDisabilitato(utente)) {
+                const errEl = document.getElementById('loginError');
+                errEl.innerText = "Utente disabilitato dall'accesso. Contattare l'ufficio amministrazione.";
+                errEl.classList.remove('hidden');
                 return;
             }
 
@@ -795,20 +838,39 @@
                     </td>
                 </tr>`).join('');
 
-            const utentiVisibili = pulisciUtentiSistema(DB.utenti);
-            document.querySelector('#admTblUtenti tbody').innerHTML = utentiVisibili.map((u, idx) => `
-                <tr class="${editIdxUtente === idx ? 'editing-row' : ''}">
+            const tuttiUtenti = pulisciUtentiSistema(DB.utenti);
+            const numDisabilitati = tuttiUtenti.filter(u => isUtenteDisabilitato(u)).length;
+            const numAttivi = tuttiUtenti.length - numDisabilitati;
+            const lblCont = document.getElementById('lblConteggioUtenti');
+            if (lblCont) {
+                lblCont.innerText = `Attivi: ${numAttivi} | Disabilitati: ${numDisabilitati}` + (mostraDisabilitatiAdmin ? ' (tutti visibili)' : ' (disabilitati nascosti)');
+            }
+
+            const rowsUtentiHtml = [];
+            tuttiUtenti.forEach((u, idx) => {
+                const disab = isUtenteDisabilitato(u);
+                if (disab && !mostraDisabilitatiAdmin && editIdxUtente !== idx) return;
+                const badgeStato = disab
+                    ? '<span class="status-pill" style="background:#fee2e2; color:#991b1b; border:1px solid #f87171;">DISABILITATO</span>'
+                    : '<span class="status-pill status-elaborato">ATTIVO</span>';
+                const rowStyle = disab ? 'opacity: 0.72; background-color: #fef2f2;' : '';
+                rowsUtentiHtml.push(`
+                <tr class="${editIdxUtente === idx ? 'editing-row' : ''}" style="${rowStyle}">
                     <td>${u.Matricola}</td>
                     <td>${u.Cognome} ${u.Nome}</td>
                     <td><code>${u.Username}</code> / <code>${u.Password}</code></td>
                     <td>${u.Ruolo}</td>
+                    <td>${badgeStato}</td>
                     <td>
                         <div class="action-btns">
                             <button class="btn btn-info btn-sm" onclick="adminPreparaModificaUtente(${idx})">Modifica</button>
+                            <button class="btn ${disab ? 'btn-success' : 'btn-warning'} btn-sm" onclick="adminCambiaStatoUtente(${idx})">${disab ? 'Riattiva' : 'Disabilita'}</button>
                             <button class="btn btn-danger btn-sm" onclick="adminElimina('utenti', ${idx})">Elimina</button>
                         </div>
                     </td>
-                </tr>`).join('');
+                </tr>`);
+            });
+            document.querySelector('#admTblUtenti tbody').innerHTML = rowsUtentiHtml.join('');
 
             document.querySelector('#admTblLavorazioni tbody').innerHTML = DB.lavorazioni.map((l, idx) => `
                 <tr class="${editIdxLavorazione === idx ? 'editing-row' : ''}">
@@ -886,6 +948,7 @@
             document.getElementById('admUsrNome').value = u.Nome;
             document.getElementById('admUsrCogn').value = u.Cognome;
             document.getElementById('admUsrRuolo').value = u.Ruolo;
+            document.getElementById('admUsrStato').value = isUtenteDisabilitato(u) ? 'DISABILITATO' : 'ATTIVO';
 
             document.getElementById('boxAdminUtenti').classList.add('edit-mode');
             document.getElementById('btnSalvaUtente').innerText = "💾 Salva Modifiche";
@@ -897,6 +960,7 @@
             editIdxUtente = -1;
             ['admUsrMatr', 'admUsrUser', 'admUsrPass', 'admUsrNome', 'admUsrCogn'].forEach(id => document.getElementById(id).value = '');
             document.getElementById('admUsrRuolo').value = 'OPERAIO';
+            document.getElementById('admUsrStato').value = 'ATTIVO';
             document.getElementById('boxAdminUtenti').classList.remove('edit-mode');
             document.getElementById('btnSalvaUtente').innerText = "+ Aggiungi Dipendente";
             document.getElementById('btnAnnullaUtente').classList.add('hidden');
@@ -910,9 +974,10 @@
             const nome = document.getElementById('admUsrNome').value.trim();
             const cogn = document.getElementById('admUsrCogn').value.trim();
             const ruolo = document.getElementById('admUsrRuolo').value;
+            const stato = document.getElementById('admUsrStato').value;
 
             if (!matr || !user || !pass || !nome || !cogn) return alert("Compila tutti i campi del dipendente.");
-            const nuovoObj = { Matricola: matr, Username: user, Password: pass, Nome: nome, Cognome: cogn, Ruolo: ruolo };
+            const nuovoObj = { Matricola: matr, Username: user, Password: pass, Nome: nome, Cognome: cogn, Ruolo: ruolo, Stato: stato };
 
             if (editIdxUtente > -1) {
                 DB.utenti[editIdxUtente] = nuovoObj;
@@ -920,6 +985,7 @@
             } else {
                 DB.utenti.push(nuovoObj);
                 ['admUsrMatr', 'admUsrUser', 'admUsrPass', 'admUsrNome', 'admUsrCogn'].forEach(id => document.getElementById(id).value = '');
+                document.getElementById('admUsrStato').value = 'ATTIVO';
             }
             salvaSuCloud();
             aggiornaTabelleAdmin();
@@ -1303,7 +1369,7 @@
                 boxS.classList.remove('hidden');
                 const selO = document.getElementById('rapOperaio');
                 ordinaUtentiPerCognome();
-                const operai = DB.utenti.filter(u => String(u.Ruolo || '').toUpperCase().includes('OPERAIO'));
+                const operai = DB.utenti.filter(u => !isUtenteDisabilitato(u) && String(u.Ruolo || '').toUpperCase().includes('OPERAIO'));
                 selO.innerHTML = '<option value="">-- Seleziona lavoratore --</option>' + 
                     operai.map(u => `<option value="${u.Matricola}">${u.Cognome} ${u.Nome} (Matr. ${u.Matricola})</option>`).join('');
             } else {
