@@ -220,11 +220,10 @@
                     <div>
                         <label>Ruolo</label>
                         <select id="admUsrRuolo">
-                            <option value="OPERAIO">OPERAIO</option>
+                            <option value="OPERAIO">OPERAIO (solo proprie ore)</option>
+                            <option value="IMPIEGATO">IMPIEGATO (solo proprie ore)</option>
                             <option value="CAPOCANTIERE,OPERAIO">CAPOCANTIERE,OPERAIO</option>
                             <option value="TECNICO">TECNICO</option>
-                            <option value="IMPIEGATO">IMPIEGATO</option>
-                            <option value="GESTORE">GESTORE</option>
                         </select>
                     </div>
                     <div>
@@ -791,7 +790,7 @@
                 }
                 document.getElementById('screenSceltaRuolo').classList.remove('hidden');
             } else {
-                ruoloAttivo = ruoloBruto;
+                ruoloAttivo = ruoloBruto.includes('IMPIEGATO') ? 'IMPIEGATO' : ruoloBruto;
                 document.getElementById('badgeRole').innerText = ruoloAttivo + ": " + nomeCompleto;
                 mostraRapportino();
             }
@@ -947,7 +946,15 @@
             document.getElementById('admUsrPass').value = u.Password;
             document.getElementById('admUsrNome').value = u.Nome;
             document.getElementById('admUsrCogn').value = u.Cognome;
-            document.getElementById('admUsrRuolo').value = u.Ruolo;
+            const selRuoloEl = document.getElementById('admUsrRuolo');
+            const ruoloNorm = String(u.Ruolo || 'OPERAIO').trim().toUpperCase();
+            if (!Array.from(selRuoloEl.options).some(opt => opt.value === ruoloNorm)) {
+                const opt = document.createElement('option');
+                opt.value = ruoloNorm;
+                opt.text = ruoloNorm;
+                selRuoloEl.add(opt);
+            }
+            selRuoloEl.value = ruoloNorm;
             document.getElementById('admUsrStato').value = isUtenteDisabilitato(u) ? 'DISABILITATO' : 'ATTIVO';
 
             document.getElementById('boxAdminUtenti').classList.add('edit-mode');
