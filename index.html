@@ -1,0 +1,1855 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Rapportini Edile">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#1f4e79">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%231f4e79'/%3E%3Ctext x='50' y='64' font-size='48' font-family='Arial,sans-serif' font-weight='bold' fill='%23f59e0b' text-anchor='middle'%3EEC%3C/text%3E%3C/svg%3E">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%231f4e79'/%3E%3Ctext x='50' y='64' font-size='48' font-family='Arial,sans-serif' font-weight='bold' fill='%23f59e0b' text-anchor='middle'%3EEC%3C/text%3E%3C/svg%3E">
+    <title>Edile Costruzioni s.r.l. - Rapportini Cloud</title>
+    <!-- SDK Firebase v8 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <!-- SheetJS per esportazione reale in Excel (.xlsx) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary: #1f4e79;
+            --primary-dark: #102a45;
+            --accent: #f59e0b;
+            --bg: #f3f4f6;
+            --card-bg: #ffffff;
+            --text: #1f2937;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+            --danger: #dc2626;
+            --success: #16a34a;
+            --info: #0284c7;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { background-color: var(--bg); color: var(--text); padding-bottom: 40px; }
+        header { background-color: var(--primary); color: white; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
+        header h1 { font-size: 1.05rem; font-weight: 700; letter-spacing: 0.5px; }
+        .badge { background: var(--accent); color: #000; padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; }
+        .container { max-width: 780px; margin: 0 auto; padding: 16px; }
+        .container.wide { max-width: 1050px; }
+        .card { background: var(--card-bg); border-radius: 12px; padding: 18px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid var(--border); }
+        h2 { font-size: 1.15rem; color: var(--primary-dark); margin-bottom: 12px; }
+        h3 { font-size: 1rem; color: var(--primary); margin-top: 18px; margin-bottom: 10px; border-bottom: 2px solid var(--primary); padding-bottom: 4px; }
+        label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: var(--text); }
+        input, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; margin-bottom: 12px; background: #fff; }
+        input:focus, select:focus { outline: none; border-color: var(--primary); }
+        
+        .btn { display: block; width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 0.95rem; font-weight: bold; cursor: pointer; text-align: center; text-decoration: none; margin-bottom: 10px; transition: opacity 0.2s; }
+        .btn:active { opacity: 0.8; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-sm { padding: 6px 10px; font-size: 0.8rem; width: auto; display: inline-block; margin-bottom: 0; }
+        .btn-secondary { background: #4b5563; }
+        .btn-success { background: var(--success); }
+        .btn-info { background: var(--info); }
+        .btn-danger { background: var(--danger); }
+        .btn-warning { background: #d97706; color: #fff; }
+        .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); }
+        
+        .hidden { display: none !important; }
+        .row { display: flex; gap: 10px; flex-wrap: wrap; }
+        .row > * { flex: 1; min-width: 140px; }
+        .action-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+        
+        .giorno-card { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px; margin-bottom: 12px; }
+        .giorno-card h4 { color: var(--primary-dark); margin-bottom: 10px; font-size: 0.9rem; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; text-transform: uppercase; }
+        .giorno-card input { margin-bottom: 8px; padding: 8px; font-size: 0.9rem; }
+        .giorno-card label { font-size: 0.75rem; color: #475569; }
+        
+        .table-container { overflow-x: auto; margin-top: 12px; margin-bottom: 8px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th, td { border: 1px solid var(--border); padding: 8px; text-align: left; vertical-align: middle; }
+        th { background: #f8fafc; color: var(--primary); }
+        tr.editing-row { background-color: #fef3c7; }
+        
+        .alert { padding: 12px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 12px; line-height: 1.4; }
+        .alert-danger { background: #fee2e2; color: #991b1b; border: 1px solid #f87171; }
+        .alert-info { background: #e0f2fe; color: #075985; border: 1px solid #7dd3fc; }
+        .alert-success { background: #dcfce7; color: #166534; border: 1px solid #4ade80; font-weight: 600; }
+        .alert-warning { background: #fef3c7; color: #92400e; border: 1px solid #fbbf24; }
+
+        .admin-box { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 14px; margin-bottom: 16px; }
+        .admin-box.edit-mode { border: 2px solid var(--accent); background: #fffbeb; }
+        .sync-dot { height: 10px; width: 10px; background-color: #9ca3af; border-radius: 50%; display: inline-block; margin-right: 6px; }
+        .sync-online { background-color: #22c55e; box-shadow: 0 0 6px #22c55e; }
+
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 16px; }
+        .kpi-box { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; text-align: center; }
+        .kpi-val { font-size: 1.3rem; font-weight: 800; color: var(--primary); }
+        .kpi-lbl { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; margin-top: 2px; }
+
+        .status-pill { padding: 3px 8px; border-radius: 12px; font-size: 0.72rem; font-weight: bold; display: inline-block; }
+        .status-nuovo { background: #fef3c7; color: #92400e; border: 1px solid #f59e0b; }
+        .status-elaborato { background: #dcfce7; color: #166534; border: 1px solid #22c55e; }
+
+
+        .attivita-row { background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px; margin-bottom: 8px; position: relative; }
+        .attivita-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.78rem; font-weight: 700; color: var(--primary); }
+        .btn-add-att { background: #eff6ff; color: var(--primary); border: 1px dashed var(--primary); padding: 7px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; width: 100%; margin-top: 4px; }
+        .btn-add-att:active { background: #dbeafe; }
+
+
+        .multi-select-box { position: relative; margin-bottom: 12px; }
+        .multi-select-trigger { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: #fff; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; user-select: none; }
+        .multi-select-trigger:hover { border-color: var(--primary); }
+        .multi-select-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; box-shadow: 0 8px 20px rgba(0,0,0,0.14); z-index: 50; max-height: 310px; display: flex; flex-direction: column; margin-top: 4px; }
+        .multi-select-search { padding: 8px 10px; border: none; border-bottom: 1px solid var(--border); border-radius: 8px 8px 0 0; margin-bottom: 0; font-size: 0.88rem; }
+        .multi-select-actions { display: flex; gap: 6px; padding: 6px 10px; background: #f8fafc; border-bottom: 1px solid var(--border); font-size: 0.78rem; }
+        .multi-select-list { overflow-y: auto; max-height: 215px; padding: 4px 0; }
+        .multi-select-item { display: flex; align-items: center; gap: 10px; padding: 7px 12px; cursor: pointer; font-size: 0.86rem; border-bottom: 1px solid #f1f5f9; margin-bottom: 0; font-weight: 400; }
+        .multi-select-item:hover { background: #eff6ff; }
+        .multi-select-item input[type="checkbox"] { width: 17px; height: 17px; margin: 0; cursor: pointer; accent-color: var(--primary); flex-shrink: 0; }
+        .multi-select-item.already-linked { background: #f0fdf4; }
+
+        .rel-cant-group { border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 8px; background: #fff; overflow: hidden; }
+        .rel-cant-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #f1f5f9; cursor: pointer; user-select: none; font-size: 0.9rem; transition: background 0.15s; }
+        .rel-cant-header:hover { background: #e2e8f0; }
+        .rel-cant-title { font-weight: 700; color: var(--primary-dark); display: flex; align-items: center; gap: 8px; }
+        .rel-cant-count { background: var(--primary); color: #fff; font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; font-weight: 600; }
+        .rel-cant-body { padding: 0; border-top: 1px solid #cbd5e1; }
+        .rel-cant-body table { margin: 0; }
+        .rel-cant-body th, .rel-cant-body td { border-left: none; border-right: none; }
+        .rel-cant-body tr:last-child td { border-bottom: none; }
+
+        .print-only-container { display: none; }
+
+        @media print {
+            body { background: #fff; padding: 0; }
+            header, .no-print, .action-btns, #screenLogin, #screenAdmin, #screenSceltaRuolo, #screenRapportino, #gestoreScreenTableWrap { display: none !important; }
+            .container { max-width: 100%; padding: 0; margin: 0; }
+            .card { box-shadow: none; border: none; padding: 0; }
+            .print-only-container { display: block !important; }
+            .print-rap-sheet { border: 1.5px solid #1f4e79; border-radius: 8px; padding: 14px; margin-bottom: 18px; page-break-inside: avoid; break-inside: avoid; }
+            .print-rap-sheet.page-break { page-break-after: always; break-after: page; }
+            .print-rap-header { display: flex; justify-content: space-between; border-bottom: 2px solid #1f4e79; padding-bottom: 8px; margin-bottom: 10px; }
+            .print-rap-title { font-size: 1.05rem; font-weight: 800; color: #102a45; }
+            .print-rap-meta { font-size: 0.85rem; margin-bottom: 10px; line-height: 1.5; background: #f8fafc; padding: 8px; border-radius: 6px; border: 1px solid #cbd5e1; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .print-rap-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-bottom: 8px; }
+            .print-rap-table th, .print-rap-table td { border: 1px solid #94a3b8; padding: 6px 8px; text-align: left; }
+            .print-rap-table th { background: #e2e8f0 !important; color: #102a45; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .print-rap-totals { font-size: 0.88rem; font-weight: 700; text-align: right; color: #102a45; padding-top: 4px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <img src="data:image/png;base64,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" alt="Logo Edile Costruzioni s.r.l." style="height: 40px; width: auto; border-radius: 4px; background: #fff; padding: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">
+            <div>
+                <h1>EDILE COSTRUZIONI s.r.l.</h1>
+                <span style="font-size: 0.75rem; opacity: 0.9;"><span id="cloudDot" class="sync-dot"></span><span id="cloudStatusText">Connessione Cloud...</span></span>
+            </div>
+        </div>
+        <div id="userBadge" class="hidden">
+            <span class="badge" id="badgeRole">-</span>
+            <button onclick="logout()" style="background:none; border:none; color:white; margin-left:8px; cursor:pointer; text-decoration:underline; font-size:0.8rem;">Esci</button>
+        </div>
+    </header>
+
+    <div class="container" id="mainContainer">
+
+        <!-- 1. SCHERMATA LOGIN -->
+        <div id="screenLogin" class="card">
+            <h2>Accesso Operativo</h2>
+            <div id="loginError" class="alert alert-danger hidden">Credenziali errate o utente non trovato.</div>
+
+            <label>Matricola o Username</label>
+            <input type="text" id="loginUser" placeholder="Es. 144, besal, Gestore oppure admin" autocomplete="username">
+
+            <label>Password</label>
+            <div style="position: relative;">
+                <input type="password" id="loginPass" placeholder="Inserisci password" autocomplete="current-password">
+                <button type="button" onclick="togglePassword()" style="position: absolute; right: 10px; top: 10px; background: none; border: none; font-size: 1.2rem; cursor: pointer;">👁️</button>
+            </div>
+
+            <button class="btn" onclick="eseguiLogin()">Accedi</button>
+        </div>
+
+        <!-- 2. PANNELLO AMMINISTRATORE (Gestione Diretta da Browser) -->
+        <div id="screenAdmin" class="card hidden">
+            <h2>Pannello Ufficio - Gestione Database Cloud</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Modifica qui i dati aziendali direttamente dal browser. I cambiamenti si aggiorneranno automaticamente sui telefoni di tutti gli operai in cantiere all'istante.</p>
+            <div class="alert alert-info" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <span><strong>Aggiornamento da Excel:</strong> Clicca qui per sincronizzare Firebase con le nuove voci Excel (15 cantieri, 93 lavorazioni, 213 associazioni, 26 utenti operativi).</span>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button class="btn btn-info btn-sm" onclick="mostraPannelloGestore(true)">📋 Vai ai Rapportini Ricevuti</button>
+                    <button class="btn btn-danger btn-sm" onclick="ripristinaDatiExcel()">🔄 Carica nuovi dati sul Cloud</button>
+                </div>
+            </div>
+
+            <!-- CANTIERI -->
+            <h3>1. Gestione Cantieri</h3>
+            <div class="admin-box" id="boxAdminCantieri">
+                <div class="row">
+                    <div><label>Codice Cantiere</label><input type="text" id="admCantCod" placeholder="Es. 510"></div>
+                    <div><label>Descrizione / Nome</label><input type="text" id="admCantDesc" placeholder="Es. Nuovo Cantiere (Rimini)"></div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn btn-success btn-sm" id="btnSalvaCantiere" onclick="adminSalvaCantiere()">+ Aggiungi Cantiere</button>
+                    <button class="btn btn-secondary btn-sm hidden" id="btnAnnullaCantiere" onclick="adminAnnullaModificaCantiere()">Annulla</button>
+                </div>
+                <div class="table-container">
+                    <table id="admTblCantieri">
+                        <thead><tr><th>Codice</th><th>Descrizione</th><th style="width: 130px;">Azioni</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- PERSONALE -->
+            <h3>2. Gestione Personale e Accessi</h3>
+            <div class="admin-box" id="boxAdminUtenti">
+                <div class="row">
+                    <div><label>Matricola</label><input type="text" id="admUsrMatr" placeholder="Es. 999"></div>
+                    <div><label>Username</label><input type="text" id="admUsrUser" placeholder="Es. mrossi"></div>
+                    <div><label>Password</label><input type="text" id="admUsrPass" placeholder="Es. Pass2026!"></div>
+                </div>
+                <div class="row">
+                    <div><label>Nome</label><input type="text" id="admUsrNome" placeholder="Es. Mario"></div>
+                    <div><label>Cognome</label><input type="text" id="admUsrCogn" placeholder="Es. Rossi"></div>
+                    <div>
+                        <label>Ruolo</label>
+                        <select id="admUsrRuolo">
+                            <option value="OPERAIO">OPERAIO</option>
+                            <option value="CAPOCANTIERE,OPERAIO">CAPOCANTIERE,OPERAIO</option>
+                            <option value="TECNICO">TECNICO</option>
+                            <option value="IMPIEGATO">IMPIEGATO</option>
+                            <option value="GESTORE">GESTORE</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn btn-success btn-sm" id="btnSalvaUtente" onclick="adminSalvaUtente()">+ Aggiungi Dipendente</button>
+                    <button class="btn btn-secondary btn-sm hidden" id="btnAnnullaUtente" onclick="adminAnnullaModificaUtente()">Annulla</button>
+                </div>
+                <div class="table-container">
+                    <table id="admTblUtenti">
+                        <thead><tr><th>Matr.</th><th>Nome</th><th>User / Pass</th><th>Ruolo</th><th style="width: 130px;">Azioni</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- LAVORAZIONI -->
+            <h3>3. Gestione Lavorazioni</h3>
+            <div class="admin-box" id="boxAdminLavorazioni">
+                <div class="row">
+                    <div><label>Codice Lavorazione</label><input type="text" id="admLavCod" placeholder="Es. G00G90"></div>
+                    <div><label>Descrizione</label><input type="text" id="admLavDesc" placeholder="Es. Nuova lavorazione"></div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn btn-success btn-sm" id="btnSalvaLavorazione" onclick="adminSalvaLavorazione()">+ Aggiungi Lavorazione</button>
+                    <button class="btn btn-secondary btn-sm hidden" id="btnAnnullaLavorazione" onclick="adminAnnullaModificaLavorazione()">Annulla</button>
+                </div>
+                <div class="table-container">
+                    <table id="admTblLavorazioni">
+                        <thead><tr><th>Codice</th><th>Descrizione</th><th style="width: 130px;">Azioni</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ASSOCIAZIONI -->
+            <h3>4. Associa Lavorazioni ai Cantieri</h3>
+            <div class="admin-box">
+                <div class="row">
+                    <div>
+                        <label>1. Seleziona Cantiere</label>
+                        <select id="admRelCant" onchange="onCambiaCantiereRelazioni()"></select>
+                    </div>
+                    <div>
+                        <label>2. Seleziona / Flagga Lavorazioni Consentite</label>
+                        <div class="multi-select-box" id="admRelMultiBox">
+                            <div class="multi-select-trigger" onclick="toggleDropdownRelazioni()">
+                                <span id="admRelTriggerText">-- Apri tendina lavorazioni --</span>
+                                <span>▼</span>
+                            </div>
+                            <div class="multi-select-dropdown hidden" id="admRelDropdown">
+                                <input type="text" class="multi-select-search" id="admRelSearch" placeholder="🔍 Cerca codice o descrizione lavorazione..." oninput="filtraChecklistLavorazioni()">
+                                <div class="multi-select-actions">
+                                    <button type="button" class="btn btn-outline btn-sm" style="padding:3px 8px; font-size:0.75rem;" onclick="selezionaTutteRelazioni(true)">✓ Flagga tutte</button>
+                                    <button type="button" class="btn btn-secondary btn-sm" style="padding:3px 8px; font-size:0.75rem;" onclick="selezionaTutteRelazioni(false)">✕ Deseleziona tutte</button>
+                                    <button type="button" class="btn btn-info btn-sm" style="padding:3px 8px; font-size:0.75rem; margin-left:auto;" onclick="chiudiDropdownRelazioni()">Chiudi</button>
+                                </div>
+                                <div class="multi-select-list" id="admRelChecklist"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-success btn-sm" onclick="adminSalvaAssociazioniMulti()">💾 Salva Lavorazioni Flaggate per questo Cantiere</button>
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-top:14px; margin-bottom:8px;">
+                    <span style="font-size:0.82rem; font-weight:600; color:var(--text-muted);">Elenco associazioni raggruppate per cantiere (clicca sul cantiere per aprire/chiudere):</span>
+                    <div style="display:flex; gap:6px;">
+                        <button type="button" class="btn btn-outline btn-sm" style="padding:3px 8px; font-size:0.75rem;" onclick="espandiComprimiTuttiCantieriRel(true)">▼ Apri tutti</button>
+                        <button type="button" class="btn btn-secondary btn-sm" style="padding:3px 8px; font-size:0.75rem;" onclick="espandiComprimiTuttiCantieriRel(false)">▲ Chiudi tutti</button>
+                    </div>
+                </div>
+                <div id="admRelGroupsContainer"></div>
+            </div>
+        </div>
+
+        <!-- 3. SCELTA RUOLO -->
+        <div id="screenSceltaRuolo" class="card hidden">
+            <h2>Seleziona Modalità di Lavoro</h2>
+            <p style="font-size: 0.9rem; margin-bottom: 16px; color: var(--text-muted);">Il tuo account permette sia la compilazione per gli operai che per te stesso. Scegli come operare:</p>
+            <button class="btn" id="btnSceltaSupervisore" onclick="selezionaRuolo('CAPOCANTIERE')">Accedi come CAPOCANTIERE (per gli operai)</button>
+            <button class="btn btn-secondary" id="btnSceltaPersonale" onclick="selezionaRuolo('OPERAIO')">Accedi per le MIE ORE (personale)</button>
+        </div>
+
+        <!-- 4. COMPILAZIONE RAPPORTINO (Cantiere - Settimanale / Multi-Cantiere) -->
+        <div id="screenRapportino" class="card hidden">
+            <h2 id="titoloCompilazione">Compilazione Rapportino</h2>
+            
+            <div id="rapEsitoInvio" class="alert alert-success hidden"></div>
+
+            <div id="boxSquadra" class="hidden">
+                <label>Lavoratore (per conto di chi compili)</label>
+                <select id="rapOperaio"></select>
+            </div>
+
+            <div class="row">
+                <div><label>Periodo Dal</label><input type="date" id="rapDataDal" onchange="generaGiornate()"></div>
+                <div><label>Periodo Al</label><input type="date" id="rapDataAl" onchange="generaGiornate()"></div>
+            </div>
+            <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
+                <button type="button" class="btn btn-outline btn-sm" onclick="impostaSettimanaCorrente()">📅 Questa Settimana (Lun-Ven)</button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="impostaSoloOggi()">📍 Solo Oggi</button>
+            </div>
+
+            <div class="alert alert-info" style="font-size: 0.8rem;">
+                Puoi compilare più giorni insieme (es. tutta la settimana) e, se nella stessa giornata hai lavorato su <strong>più cantieri</strong>, usa il tasto <strong>"+ Aggiungi altro cantiere in questo giorno"</strong>.
+            </div>
+
+            <h3>Dettaglio Giornate e Cantieri</h3>
+            <div id="giornateContainer">
+                <div class="alert alert-info">Seleziona un periodo valido per generare le schede giornaliere.</div>
+            </div>
+
+            <div style="margin-top: 25px;">
+                <button class="btn btn-success" id="btnInviaCloud" onclick="inviaRapportinoCloud()">📤 Invia Rapportino in Ufficio</button>
+            </div>
+        </div>
+
+        <!-- 5. PANNELLO GESTORE (Solo Rapportini Ricevuti) -->
+        <div id="screenGestore" class="card hidden">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
+                <div>
+                    <h2 style="margin-bottom: 2px;">Gestione Rapportini Ricevuti</h2>
+                    <span style="font-size: 0.8rem; color: var(--text-muted);" id="gestoreSubtitle">Elenco rapportini trasmessi dal cantiere su Cloud</span>
+                </div>
+                <button id="btnTornaAdmin" class="btn btn-secondary btn-sm no-print hidden" onclick="mostraPannelloAdmin()">← Torna a Pannello Admin</button>
+            </div>
+
+            <!-- FILTRI -->
+            <div class="admin-box no-print">
+                <div class="row">
+                    <div>
+                        <label>Cantiere</label>
+                        <select id="fltCantiere" onchange="renderTabellaGestore()">
+                            <option value="">-- Tutti i Cantieri --</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Lavoratore</label>
+                        <select id="fltOperaio" onchange="renderTabellaGestore()">
+                            <option value="">-- Tutti i Lavoratori --</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Stato</label>
+                        <select id="fltStato" onchange="renderTabellaGestore()">
+                            <option value="">-- Tutti --</option>
+                            <option value="NUOVO">Da Elaborare</option>
+                            <option value="ELABORATO">Elaborati</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div><label>Periodo Dal</label><input type="date" id="fltDataDal" onchange="renderTabellaGestore()"></div>
+                    <div><label>Periodo Al</label><input type="date" id="fltDataAl" onchange="renderTabellaGestore()"></div>
+                    <div style="display: flex; align-items: flex-end; padding-bottom: 12px;">
+                        <button class="btn btn-outline btn-sm" style="width: 100%;" onclick="resetFiltriGestore()">Azzera Filtri</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIEPILOGO ORE -->
+            <div class="kpi-grid">
+                <div class="kpi-box"><div class="kpi-val" id="kpiCount">0</div><div class="kpi-lbl">Rapportini</div></div>
+                <div class="kpi-box"><div class="kpi-val" id="kpiOrd">0</div><div class="kpi-lbl">Ore Ordinarie</div></div>
+                <div class="kpi-box"><div class="kpi-val" id="kpiStr">0</div><div class="kpi-lbl">Straordinari</div></div>
+                <div class="kpi-box"><div class="kpi-val" id="kpiFer">0</div><div class="kpi-lbl">Ferie / Perm.</div></div>
+                <div class="kpi-box"><div class="kpi-val" id="kpiCig">0</div><div class="kpi-lbl">CIG</div></div>
+            </div>
+
+            <!-- AZIONI ESPORTAZIONE / STAMPA -->
+            <div class="row no-print" style="margin-bottom: 14px;">
+                <button class="btn btn-success" onclick="esportaExcelGestore()">📊 Esporta in Excel (.xlsx)</button>
+                <button class="btn btn-info" onclick="stampaRapportiniGestore(true)">🖨️ Stampa Schede per Invio (Pagina Separata)</button>
+                <button class="btn btn-secondary" onclick="stampaRapportiniGestore(false)">🖨️ Stampa Elenco Continuo</button>
+            </div>
+
+            <!-- TABELLA RAPPORTINI -->
+            <div class="table-container" id="gestoreScreenTableWrap">
+                <table id="tblGestoreRapportini">
+                    <thead>
+                        <tr>
+                            <th>Invio</th>
+                            <th>Lavoratore</th>
+                            <th>Cantieri / Lavorazioni</th>
+                            <th>Dettaglio Giornate e Ore</th>
+                            <th>Totali</th>
+                            <th>Stato</th>
+                            <th class="no-print" style="width: 215px;">Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <!-- CONTENITORE STAMPA SUDDIVISA PER SINGOLO INVIO -->
+            <div id="printSheetsContainer" class="print-only-container"></div>
+        </div>
+
+    </div>
+
+    <script>
+        // Configurazione Firebase integrata
+        const firebaseConfig = {
+            apiKey: "AIzaSyABC8RaY9FYWdU6IIBRioTL9L0z03XmLCo",
+            authDomain: "edile-costruzioni-rapportini.firebaseapp.com",
+            databaseURL: "https://edile-costruzioni-rapportini-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "edile-costruzioni-rapportini",
+            storageBucket: "edile-costruzioni-rapportini.firebasestorage.app",
+            messagingSenderId: "90398700633",
+            appId: "1:90398700633:web:15cf5a24d1929ebe326d48"
+        };
+
+        // Database anagrafiche importato dai fogli Excel (senza Amministratore e Gestore nell'elenco utenti)
+        const DB_FACTORY = {"utenti": [{"Matricola": "144", "Username": "besal", "Password": "bes144", "Nome": "Besnik", "Cognome": "Alhysa", "Ruolo": "OPERAIO"}, {"Matricola": "90", "Username": "benav", "Password": "ben90", "Nome": "Benito", "Cognome": "Avarello", "Ruolo": "OPERAIO"}, {"Matricola": "83", "Username": "albas", "Password": "alb83", "Nome": "Alberto", "Cognome": "Bastoni", "Ruolo": "CAPOCANTIERE,OPERAIO"}, {"Matricola": "40", "Username": "agobu", "Password": "buc40", "Nome": "Agostino", "Cognome": "Bucca", "Ruolo": "CAPOCANTIERE,OPERAIO"}, {"Matricola": "88", "Username": "amci", "Password": "amb88", "Nome": "Ambrogio", "Cognome": "Cito", "Ruolo": "CAPOCANTIERE,OPERAIO"}, {"Matricola": "143", "Username": "tauco", "Password": "tau143", "Nome": "Taulant", "Cognome": "Cohodari", "Ruolo": "OPERAIO"}, {"Matricola": "123", "Username": "aliefa", "Password": "ali123", "Nome": "Alieu", "Cognome": "Faye", "Ruolo": "OPERAIO"}, {"Matricola": "142", "Username": "sabis", "Password": "sab142", "Nome": "Sabedin", "Cognome": "Isenovski", "Ruolo": "OPERAIO"}, {"Matricola": "141", "Username": "fatka", "Password": "fat141", "Nome": "Fatmir", "Cognome": "Karaj", "Ruolo": "OPERAIO"}, {"Matricola": "102", "Username": "nicmo", "Password": "nic102", "Nome": "Nicolo'", "Cognome": "Morreale", "Ruolo": "OPERAIO"}, {"Matricola": "23", "Username": "pasmo", "Password": "pas23", "Nome": "Pasqualino", "Cognome": "Morreale", "Ruolo": "OPERAIO"}, {"Matricola": "28", "Username": "mapre", "Password": "mas28", "Nome": "Massimo", "Cognome": "Pretelli", "Ruolo": "CAPOCANTIERE,OPERAIO"}, {"Matricola": "126", "Username": "adrad", "Password": "adz126", "Nome": "Adzi", "Cognome": "Radovesi", "Ruolo": "OPERAIO"}, {"Matricola": "32", "Username": "filro", "Password": "fil32", "Nome": "Filippo", "Cognome": "Rosa", "Ruolo": "OPERAIO"}, {"Matricola": "93", "Username": "lase", "Password": "lua93", "Nome": "Luan", "Cognome": "Selimi", "Ruolo": "OPERAIO"}, {"Matricola": "113", "Username": "giost", "Password": "gio113", "Nome": "Giovanni", "Cognome": "Stasi", "Ruolo": "CAPOCANTIERE,OPERAIO"}, {"Matricola": "87", "Username": "giaur", "Password": "gia87", "Nome": "Gianfranco", "Cognome": "Urbinati", "Ruolo": "OPERAIO"}, {"Matricola": "106", "Username": "chuye", "Password": "chu106", "Nome": "Chukwuma", "Cognome": "Yekini", "Ruolo": "OPERAIO"}, {"Matricola": "954", "Username": "fedto", "Password": "fed954", "Nome": "Federico", "Cognome": "Togni", "Ruolo": "CAPOCANTIERE,OPERAIO"}, {"Matricola": "963", "Username": "sebca", "Password": "seb963", "Nome": "Sebina", "Cognome": "Calì", "Ruolo": "TECNICO"}, {"Matricola": "950", "Username": "giaca", "Password": "gia950", "Nome": "Giacomo", "Cognome": "Caragiulo", "Ruolo": "TECNICO"}, {"Matricola": "952", "Username": "adrici", "Password": "adr952", "Nome": "Adriano", "Cognome": "Cito", "Ruolo": "TECNICO"}, {"Matricola": "944", "Username": "giuga", "Password": "giu944", "Nome": "Giulia", "Cognome": "Galli", "Ruolo": "TECNICO"}, {"Matricola": "962", "Username": "giagi", "Password": "gia962", "Nome": "Gian Carlo", "Cognome": "Giovanardi", "Ruolo": "TECNICO"}, {"Matricola": "948", "Username": "ata", "Password": "ant948", "Nome": "Antonio", "Cognome": "Tamai", "Ruolo": "TECNICO"}, {"Matricola": "941", "Username": "robza", "Password": "rob941", "Nome": "Roberto", "Cognome": "Zanotti", "Ruolo": "TECNICO"}], "cantieri": [{"Codice": "476", "Descrizione": "Nuova villa Sanpa (San Patrignano)"}, {"Codice": "010", "Descrizione": "Ex Porcillaia San Patrignano (San Patrignano)"}, {"Codice": "443", "Descrizione": "Via Acquario (Rimini)"}, {"Codice": "483", "Descrizione": "Ex Enel (Rimini)"}, {"Codice": "448", "Descrizione": "Comparto Salnitrari (Tolentino)"}, {"Codice": "449", "Descrizione": "Casadidio (Tolentino)"}, {"Codice": "450", "Descrizione": "San Ginesio D'Angeli (Tolentino)"}, {"Codice": "451", "Descrizione": "Treia (Tolentino)"}, {"Codice": "452", "Descrizione": "Parapetti (Tolentino)"}, {"Codice": "SG0", "Descrizione": "Spese generali (Ufficio)"}, {"Codice": "004", "Descrizione": "Magazzino Rimini (Rimini)"}, {"Codice": "005", "Descrizione": "Magazzino Tolentino (Tolentino)"}, {"Codice": "006", "Descrizione": "Ufficio Tolentino (Tolentino)"}, {"Codice": "506", "Descrizione": "Villa Grappa (San Mauro)"}, {"Codice": "438", "Descrizione": "Via Zanella (Rimini)"}], "lavorazioni": [{"Codice": "A00", "Descrizione": "COSTI GENERALI"}, {"Codice": "A00A01", "Descrizione": "Amministrativi"}, {"Codice": "A00A02", "Descrizione": "Indiretti aziendali"}, {"Codice": "A00A05", "Descrizione": "Spese professionisti e laboratori"}, {"Codice": "A00A10", "Descrizione": "Indiretti di cantiere"}, {"Codice": "A00A20", "Descrizione": "Accantieramento e sicurezza"}, {"Codice": "B00", "Descrizione": "MOVIMENTO TERRE E PREPARAZIONI"}, {"Codice": "B00B01", "Descrizione": "Sgomberi, demolizioni e rimozioni"}, {"Codice": "B00B10", "Descrizione": "Scavi e rinterri"}, {"Codice": "C00", "Descrizione": "RISANAMENTI"}, {"Codice": "C00C01", "Descrizione": "Consolidamento terre"}, {"Codice": "C00C10", "Descrizione": "Consolidamento fondazioni"}, {"Codice": "C00C15", "Descrizione": "Consolidamento murature"}, {"Codice": "C00C20", "Descrizione": "Consolidamento solai e tetti"}, {"Codice": "D00", "Descrizione": "STRUTTURE"}, {"Codice": "D00D01", "Descrizione": "Fondazioni profonde"}, {"Codice": "D00D02", "Descrizione": "Opere strutturali generiche"}, {"Codice": "D00D10", "Descrizione": "Berlinesi diaframmi e tiranti"}, {"Codice": "D00D20", "Descrizione": "Opere di fondazione"}, {"Codice": "D00D30", "Descrizione": "Strutture portanti in elevazione"}, {"Codice": "D00D40", "Descrizione": "Solai"}, {"Codice": "D00D50", "Descrizione": "Strutture in CLS generiche"}, {"Codice": "D00D51", "Descrizione": "Strutture in acciaio generiche"}, {"Codice": "D00D52", "Descrizione": "Strutture in legno generiche"}, {"Codice": "D00D60", "Descrizione": "Strutture varie"}, {"Codice": "E00", "Descrizione": "OPERE PREFABBRICATE"}, {"Codice": "E00E01", "Descrizione": "Opere prefabbricate in CLS"}, {"Codice": "E00E10", "Descrizione": "Opere prefabbricate in legno"}, {"Codice": "E00E20", "Descrizione": "Opere prefabbricate in ferro"}, {"Codice": "F00", "Descrizione": "TAVOLATI"}, {"Codice": "F00F01", "Descrizione": "Murature in laterizio"}, {"Codice": "F00F05", "Descrizione": "Murature cementizie"}, {"Codice": "F00F10", "Descrizione": "Murature a secco"}, {"Codice": "F00F20", "Descrizione": "Murature in Gasbeton"}, {"Codice": "F00F21", "Descrizione": "Murature in Leca"}, {"Codice": "G00", "Descrizione": "OPERE EDILI DI FINITURA"}, {"Codice": "G00G01", "Descrizione": "Coibenti e anti rumore"}, {"Codice": "G00G10", "Descrizione": "Scarichi e ventilazioni"}, {"Codice": "G00G20", "Descrizione": "Controsoffitti"}, {"Codice": "G00G30", "Descrizione": "Intonaci"}, {"Codice": "G00G40", "Descrizione": "Sottofondi massetti Igloo"}, {"Codice": "G00G41", "Descrizione": "Pavimenti e rivestienti ceramici"}, {"Codice": "G00G44", "Descrizione": "Pavimenti in legno e composti"}, {"Codice": "G00G46", "Descrizione": "Pavimenti plastici vinilici e spatolati"}, {"Codice": "G00G50", "Descrizione": "Scale e pavimenti in marmo"}, {"Codice": "G00G60", "Descrizione": "Opere da imbianchino e tinteggiatore"}, {"Codice": "G00G70", "Descrizione": "Cappotto termico"}, {"Codice": "G00G75", "Descrizione": "Facciate ventilate"}, {"Codice": "G00G80", "Descrizione": "Impermeabilizzazioni"}, {"Codice": "H00", "Descrizione": "SERRAMENTI INTERNI ED ESTERNI"}, {"Codice": "H00H01", "Descrizione": "Controtelai e monoblocchi"}, {"Codice": "H00H10", "Descrizione": "Infissi esterni"}, {"Codice": "H00H20", "Descrizione": "Porte e portoncini"}, {"Codice": "H00H25", "Descrizione": "Porte metalliche tecniche"}, {"Codice": "H00H30", "Descrizione": "Sistemi oscuranti"}, {"Codice": "I00", "Descrizione": "OPERE DI FINITURA ESTERNE"}, {"Codice": "I00I01", "Descrizione": "Parapetti"}, {"Codice": "I00I10", "Descrizione": "Opere in copertura"}, {"Codice": "I00I20", "Descrizione": "Lattonerie"}, {"Codice": "I00I30", "Descrizione": "Opere metalliche non strutturali"}, {"Codice": "J00", "Descrizione": "OPERE DI URBANIZZAZIONE"}, {"Codice": "J00J01", "Descrizione": "Arredi urbani e condominiali"}, {"Codice": "J00J10", "Descrizione": "Muretti e recinzioni"}, {"Codice": "J00J20", "Descrizione": "Piazzali e parcheggi"}, {"Codice": "J00J30", "Descrizione": "Pavimentazioni esterne"}, {"Codice": "J00J40", "Descrizione": "Fognature e cavidotti"}, {"Codice": "L00", "Descrizione": "ELEVATORI"}, {"Codice": "L00L01", "Descrizione": "Ascensori"}, {"Codice": "L00L10", "Descrizione": "Montascale"}, {"Codice": "L00L20", "Descrizione": "Montauto"}, {"Codice": "M00", "Descrizione": "IMPIANTI ELETTRICI"}, {"Codice": "M00M01", "Descrizione": "Impianti elettrici parti comuni edificio"}, {"Codice": "M00M10", "Descrizione": "Impianti elettrici parti private"}, {"Codice": "M00M20", "Descrizione": "Impianti elettrici opere esterne"}, {"Codice": "M00M30", "Descrizione": "Domotica"}, {"Codice": "M00M40", "Descrizione": "Fotovoltaico e accumulo"}, {"Codice": "M00M50", "Descrizione": "Cabine di trsformazione"}, {"Codice": "N00", "Descrizione": "IMPIANTI MECCANICI"}, {"Codice": "N00N01", "Descrizione": "Impiantio idrico sanitario"}, {"Codice": "N00N10", "Descrizione": "Impiantio condizionamento e riscaldamento"}, {"Codice": "N00N20", "Descrizione": "Ventilazione Meccanica Controllata"}, {"Codice": "N00N30", "Descrizione": "Impianti speciali e trattamento acque"}, {"Codice": "N00N40", "Descrizione": "Impianti speciali ospedalieri"}, {"Codice": "O00", "Descrizione": "GIARDINAGGIO"}, {"Codice": "O00O01", "Descrizione": "Piantumazioni"}, {"Codice": "O00O10", "Descrizione": "Inerbimenti"}, {"Codice": "P00", "Descrizione": "ASSISTENZE EDILI"}, {"Codice": "P00P01", "Descrizione": "Assistenze edili generiche"}, {"Codice": "P00PM1", "Descrizione": "Assistenze edili imp. Elettrici"}, {"Codice": "P00PN1", "Descrizione": "Assistenze edili imp. Meccanici"}, {"Codice": "Z01", "Descrizione": "RIFACIMENTO BAGNI SANPA"}, {"Codice": "Z01Z01", "Descrizione": "VARIE"}, {"Codice": "Z02Z00", "Descrizione": "Finiture di fine cantiere"}], "cantiereLavorazioni": [{"Cantiere": "SG0", "Lavorazione": "A00A02"}, {"Cantiere": "004", "Lavorazione": "A00A02"}, {"Cantiere": "005", "Lavorazione": "A00A02"}, {"Cantiere": "006", "Lavorazione": "A00A02"}, {"Cantiere": "483", "Lavorazione": "A00A05"}, {"Cantiere": "483", "Lavorazione": "A00A20"}, {"Cantiere": "483", "Lavorazione": "B00B10"}, {"Cantiere": "483", "Lavorazione": "D00D50"}, {"Cantiere": "483", "Lavorazione": "D00D51"}, {"Cantiere": "483", "Lavorazione": "F00F01"}, {"Cantiere": "483", "Lavorazione": "F00F10"}, {"Cantiere": "483", "Lavorazione": "F00F21"}, {"Cantiere": "483", "Lavorazione": "G00G01"}, {"Cantiere": "483", "Lavorazione": "G00G20"}, {"Cantiere": "483", "Lavorazione": "G00G40"}, {"Cantiere": "483", "Lavorazione": "G00G41"}, {"Cantiere": "483", "Lavorazione": "G00G44"}, {"Cantiere": "483", "Lavorazione": "G00G50"}, {"Cantiere": "483", "Lavorazione": "G00G60"}, {"Cantiere": "483", "Lavorazione": "G00G70"}, {"Cantiere": "483", "Lavorazione": "G00G80"}, {"Cantiere": "483", "Lavorazione": "H00H01"}, {"Cantiere": "483", "Lavorazione": "H00H10"}, {"Cantiere": "483", "Lavorazione": "H00H25"}, {"Cantiere": "483", "Lavorazione": "H00H30"}, {"Cantiere": "483", "Lavorazione": "I00I30"}, {"Cantiere": "483", "Lavorazione": "J00"}, {"Cantiere": "483", "Lavorazione": "J00J01"}, {"Cantiere": "483", "Lavorazione": "J00J30"}, {"Cantiere": "483", "Lavorazione": "M00"}, {"Cantiere": "483", "Lavorazione": "N00"}, {"Cantiere": "483", "Lavorazione": "P00PM1"}, {"Cantiere": "483", "Lavorazione": "P00PN1"}, {"Cantiere": "483", "Lavorazione": "O00O01"}, {"Cantiere": "443", "Lavorazione": "A00A05"}, {"Cantiere": "443", "Lavorazione": "A00A10"}, {"Cantiere": "443", "Lavorazione": "A00A20"}, {"Cantiere": "443", "Lavorazione": "B00B01"}, {"Cantiere": "443", "Lavorazione": "B00B10"}, {"Cantiere": "443", "Lavorazione": "D00D01"}, {"Cantiere": "443", "Lavorazione": "D00D02"}, {"Cantiere": "443", "Lavorazione": "F00F01"}, {"Cantiere": "443", "Lavorazione": "F00F10"}, {"Cantiere": "443", "Lavorazione": "F00F21"}, {"Cantiere": "443", "Lavorazione": "G00G01"}, {"Cantiere": "443", "Lavorazione": "G00G10"}, {"Cantiere": "443", "Lavorazione": "G00G20"}, {"Cantiere": "443", "Lavorazione": "G00G30"}, {"Cantiere": "443", "Lavorazione": "G00G41"}, {"Cantiere": "443", "Lavorazione": "G00G44"}, {"Cantiere": "443", "Lavorazione": "G00G50"}, {"Cantiere": "443", "Lavorazione": "G00G60"}, {"Cantiere": "443", "Lavorazione": "G00G70"}, {"Cantiere": "443", "Lavorazione": "G00G80"}, {"Cantiere": "443", "Lavorazione": "H00H01"}, {"Cantiere": "443", "Lavorazione": "H00H10"}, {"Cantiere": "443", "Lavorazione": "H00H20"}, {"Cantiere": "443", "Lavorazione": "H00H25"}, {"Cantiere": "443", "Lavorazione": "H00H30"}, {"Cantiere": "443", "Lavorazione": "I00I01"}, {"Cantiere": "443", "Lavorazione": "I00I10"}, {"Cantiere": "443", "Lavorazione": "I00I20"}, {"Cantiere": "443", "Lavorazione": "I00I30"}, {"Cantiere": "443", "Lavorazione": "J00J30"}, {"Cantiere": "443", "Lavorazione": "J00J40"}, {"Cantiere": "443", "Lavorazione": "L00L01"}, {"Cantiere": "443", "Lavorazione": "M00"}, {"Cantiere": "443", "Lavorazione": "N00"}, {"Cantiere": "443", "Lavorazione": "O00"}, {"Cantiere": "443", "Lavorazione": "P00P01"}, {"Cantiere": "443", "Lavorazione": "P00PM1"}, {"Cantiere": "443", "Lavorazione": "P00PN1"}, {"Cantiere": "410", "Lavorazione": "A00"}, {"Cantiere": "410", "Lavorazione": "D00"}, {"Cantiere": "410", "Lavorazione": "F00"}, {"Cantiere": "410", "Lavorazione": "G00"}, {"Cantiere": "410", "Lavorazione": "H00"}, {"Cantiere": "410", "Lavorazione": "I00"}, {"Cantiere": "410", "Lavorazione": "M00"}, {"Cantiere": "410", "Lavorazione": "N00"}, {"Cantiere": "410", "Lavorazione": "P00"}, {"Cantiere": "448", "Lavorazione": "A00A02"}, {"Cantiere": "448", "Lavorazione": "A00A05"}, {"Cantiere": "448", "Lavorazione": "A00A10"}, {"Cantiere": "448", "Lavorazione": "A00A20"}, {"Cantiere": "448", "Lavorazione": "B00B01"}, {"Cantiere": "448", "Lavorazione": "B00B10"}, {"Cantiere": "448", "Lavorazione": "D00D01"}, {"Cantiere": "448", "Lavorazione": "D00D02"}, {"Cantiere": "448", "Lavorazione": "F00F01"}, {"Cantiere": "448", "Lavorazione": "F00F10"}, {"Cantiere": "448", "Lavorazione": "G00G30"}, {"Cantiere": "448", "Lavorazione": "G00G40"}, {"Cantiere": "448", "Lavorazione": "G00G60"}, {"Cantiere": "448", "Lavorazione": "G00G70"}, {"Cantiere": "448", "Lavorazione": "G00G80"}, {"Cantiere": "448", "Lavorazione": "H00"}, {"Cantiere": "448", "Lavorazione": "I00I10"}, {"Cantiere": "448", "Lavorazione": "I00I20"}, {"Cantiere": "448", "Lavorazione": "I00I30"}, {"Cantiere": "448", "Lavorazione": "J00J40"}, {"Cantiere": "448", "Lavorazione": "M00"}, {"Cantiere": "448", "Lavorazione": "N00"}, {"Cantiere": "449", "Lavorazione": "A00A02"}, {"Cantiere": "449", "Lavorazione": "A00A05"}, {"Cantiere": "449", "Lavorazione": "A00A10"}, {"Cantiere": "449", "Lavorazione": "A00A20"}, {"Cantiere": "449", "Lavorazione": "B00B01"}, {"Cantiere": "449", "Lavorazione": "C00C15"}, {"Cantiere": "449", "Lavorazione": "D00D40"}, {"Cantiere": "449", "Lavorazione": "F00F01"}, {"Cantiere": "449", "Lavorazione": "F00F10"}, {"Cantiere": "449", "Lavorazione": "G00G30"}, {"Cantiere": "449", "Lavorazione": "G00G41"}, {"Cantiere": "449", "Lavorazione": "G00G60"}, {"Cantiere": "449", "Lavorazione": "G00G80"}, {"Cantiere": "449", "Lavorazione": "H00H01"}, {"Cantiere": "449", "Lavorazione": "H00H10"}, {"Cantiere": "449", "Lavorazione": "H00H20"}, {"Cantiere": "449", "Lavorazione": "I00I10"}, {"Cantiere": "449", "Lavorazione": "I00I20"}, {"Cantiere": "449", "Lavorazione": "M00"}, {"Cantiere": "449", "Lavorazione": "N00"}, {"Cantiere": "450", "Lavorazione": "A00A02"}, {"Cantiere": "450", "Lavorazione": "A00A05"}, {"Cantiere": "450", "Lavorazione": "A00A10"}, {"Cantiere": "450", "Lavorazione": "A00A20"}, {"Cantiere": "450", "Lavorazione": "B00B01"}, {"Cantiere": "450", "Lavorazione": "B00B10"}, {"Cantiere": "450", "Lavorazione": "D00D02"}, {"Cantiere": "450", "Lavorazione": "F00F01"}, {"Cantiere": "450", "Lavorazione": "F00F10"}, {"Cantiere": "450", "Lavorazione": "G00G30"}, {"Cantiere": "450", "Lavorazione": "G00G40"}, {"Cantiere": "450", "Lavorazione": "G00G60"}, {"Cantiere": "450", "Lavorazione": "G00G70"}, {"Cantiere": "450", "Lavorazione": "G00G80"}, {"Cantiere": "450", "Lavorazione": "H00"}, {"Cantiere": "450", "Lavorazione": "I00I10"}, {"Cantiere": "450", "Lavorazione": "I00I20"}, {"Cantiere": "450", "Lavorazione": "J00J40"}, {"Cantiere": "450", "Lavorazione": "J00"}, {"Cantiere": "450", "Lavorazione": "M00"}, {"Cantiere": "450", "Lavorazione": "N00"}, {"Cantiere": "452", "Lavorazione": "A00A02"}, {"Cantiere": "452", "Lavorazione": "A00A05"}, {"Cantiere": "452", "Lavorazione": "A00A10"}, {"Cantiere": "452", "Lavorazione": "A00A20"}, {"Cantiere": "452", "Lavorazione": "B00B01"}, {"Cantiere": "452", "Lavorazione": "B00B10"}, {"Cantiere": "452", "Lavorazione": "D00D01"}, {"Cantiere": "452", "Lavorazione": "D00D02"}, {"Cantiere": "452", "Lavorazione": "F00F01"}, {"Cantiere": "452", "Lavorazione": "F00F10"}, {"Cantiere": "452", "Lavorazione": "G00G30"}, {"Cantiere": "452", "Lavorazione": "G00G40"}, {"Cantiere": "452", "Lavorazione": "G00G60"}, {"Cantiere": "452", "Lavorazione": "G00G70"}, {"Cantiere": "452", "Lavorazione": "G00G80"}, {"Cantiere": "452", "Lavorazione": "H00"}, {"Cantiere": "452", "Lavorazione": "I00I10"}, {"Cantiere": "452", "Lavorazione": "I00I20"}, {"Cantiere": "452", "Lavorazione": "I00I30"}, {"Cantiere": "452", "Lavorazione": "J00J40"}, {"Cantiere": "452", "Lavorazione": "M00"}, {"Cantiere": "452", "Lavorazione": "N00"}, {"Cantiere": "506", "Lavorazione": "A00A02"}, {"Cantiere": "506", "Lavorazione": "A00A10"}, {"Cantiere": "506", "Lavorazione": "A00A20"}, {"Cantiere": "506", "Lavorazione": "I00"}, {"Cantiere": "438", "Lavorazione": "Z02Z00"}, {"Cantiere": "476", "Lavorazione": "A00A01"}, {"Cantiere": "476", "Lavorazione": "A00A02"}, {"Cantiere": "476", "Lavorazione": "A00A05"}, {"Cantiere": "476", "Lavorazione": "A00A10"}, {"Cantiere": "476", "Lavorazione": "A00A20"}, {"Cantiere": "476", "Lavorazione": "B00B01"}, {"Cantiere": "476", "Lavorazione": "B00B10"}, {"Cantiere": "476", "Lavorazione": "D00D01"}, {"Cantiere": "476", "Lavorazione": "D00D02"}, {"Cantiere": "476", "Lavorazione": "F00F01"}, {"Cantiere": "476", "Lavorazione": "F00F10"}, {"Cantiere": "476", "Lavorazione": "F00F21"}, {"Cantiere": "476", "Lavorazione": "G00G01"}, {"Cantiere": "476", "Lavorazione": "G00G10"}, {"Cantiere": "476", "Lavorazione": "G00G20"}, {"Cantiere": "476", "Lavorazione": "G00G30"}, {"Cantiere": "476", "Lavorazione": "G00G40"}, {"Cantiere": "476", "Lavorazione": "G00G41"}, {"Cantiere": "476", "Lavorazione": "G00G44"}, {"Cantiere": "476", "Lavorazione": "G00G50"}, {"Cantiere": "476", "Lavorazione": "G00G60"}, {"Cantiere": "476", "Lavorazione": "G00G70"}, {"Cantiere": "476", "Lavorazione": "G00G80"}, {"Cantiere": "476", "Lavorazione": "H00H01"}, {"Cantiere": "476", "Lavorazione": "H00H10"}, {"Cantiere": "476", "Lavorazione": "H00H20"}, {"Cantiere": "476", "Lavorazione": "H00H25"}, {"Cantiere": "476", "Lavorazione": "H00H30"}, {"Cantiere": "476", "Lavorazione": "I00I01"}, {"Cantiere": "476", "Lavorazione": "I00I10"}, {"Cantiere": "476", "Lavorazione": "I00I20"}, {"Cantiere": "476", "Lavorazione": "I00I30"}, {"Cantiere": "476", "Lavorazione": "J00J30"}, {"Cantiere": "476", "Lavorazione": "J00J40"}, {"Cantiere": "476", "Lavorazione": "L00L01"}, {"Cantiere": "476", "Lavorazione": "M00M01"}, {"Cantiere": "476", "Lavorazione": "M00M40"}, {"Cantiere": "476", "Lavorazione": "N00"}, {"Cantiere": "476", "Lavorazione": "O00O01"}, {"Cantiere": "476", "Lavorazione": "P00P01"}, {"Cantiere": "476", "Lavorazione": "P00PM1"}, {"Cantiere": "476", "Lavorazione": "P00PN1"}]};
+
+        // Account di sistema gestiti internamente (non mostrati nella tabella dipendenti)
+        const SYSTEM_ACCOUNTS = [
+            { Matricola: "100", Username: "admin", Password: "Admin2026!", Nome: "Ufficio", Cognome: "Amministrazione", Ruolo: "AMMINISTRATORE" },
+            { Matricola: "900", Username: "gestore", Password: "Ges2026!", Nome: "Ufficio", Cognome: "Gestore", Ruolo: "GESTORE" },
+            { Matricola: "101", Username: "sabri", Password: "Sab101", Nome: "Sabri", Cognome: "Gestore", Ruolo: "GESTORE" }
+        ];
+
+        let DB = JSON.parse(JSON.stringify(DB_FACTORY));
+        let RAPPORTINI_CLOUD = [];
+        let firebaseAttivo = false;
+        let dbRef = null;
+        let rapRef = null;
+        let utenteAttuale = null;
+        let ruoloAttivo = null;
+        let autoSyncDone = false;
+
+        let editIdxCantiere = -1;
+        let editIdxUtente = -1;
+        let editIdxLavorazione = -1;
+
+        function pulisciUtentiSistema(lista) {
+            return (lista || []).filter(u => {
+                const r = String(u.Ruolo || '').trim().toUpperCase();
+                const usr = String(u.Username || '').trim().toLowerCase();
+                return !r.includes('AMMINISTRATORE') && !r.includes('GESTORE') && usr !== 'admin' && usr !== 'gestore' && usr !== 'sabri';
+            });
+        }
+
+        function ordinaUtentiPerCognome() {
+            if (!Array.isArray(DB.utenti)) return;
+            DB.utenti.sort((a, b) => {
+                const cA = String(a.Cognome || '').trim();
+                const cB = String(b.Cognome || '').trim();
+                const cmp = cA.localeCompare(cB, 'it', { sensitivity: 'base' });
+                if (cmp !== 0) return cmp;
+                return String(a.Nome || '').trim().localeCompare(String(b.Nome || '').trim(), 'it', { sensitivity: 'base' });
+            });
+        }
+
+        function ordinaCantieriPerCodice() {
+            if (!Array.isArray(DB.cantieri)) return;
+            DB.cantieri.sort((a, b) => String(a.Codice || '').trim().localeCompare(String(b.Codice || '').trim(), 'it', { numeric: true, sensitivity: 'base' }));
+        }
+
+        // Unisce le nuove voci dai file Excel nel database esistente senza perdere eventuali aggiunte manuali
+        function unisciNuoveVociDaExcel(dataFirebase) {
+            let modificato = false;
+            let utenti = pulisciUtentiSistema(dataFirebase.utenti || []);
+            if (utenti.length !== (dataFirebase.utenti || []).length) modificato = true;
+
+            let cantieri = Array.isArray(dataFirebase.cantieri) ? [...dataFirebase.cantieri] : [];
+            let lavorazioni = Array.isArray(dataFirebase.lavorazioni) ? [...dataFirebase.lavorazioni] : [];
+            let relazioni = Array.isArray(dataFirebase.cantiereLavorazioni) ? [...dataFirebase.cantiereLavorazioni] : [];
+
+            // 1. Aggiungi/aggiorna cantieri dai nuovi Excel
+            DB_FACTORY.cantieri.forEach(fc => {
+                const idx = cantieri.findIndex(c => String(c.Codice).trim() === String(fc.Codice).trim());
+                if (idx === -1) {
+                    cantieri.push(fc);
+                    modificato = true;
+                } else if (cantieri[idx].Descrizione !== fc.Descrizione) {
+                    cantieri[idx].Descrizione = fc.Descrizione;
+                    modificato = true;
+                }
+            });
+
+            // 2. Aggiungi/aggiorna lavorazioni dai nuovi Excel
+            DB_FACTORY.lavorazioni.forEach(fl => {
+                const idx = lavorazioni.findIndex(l => String(l.Codice).trim() === String(fl.Codice).trim());
+                if (idx === -1) {
+                    lavorazioni.push(fl);
+                    modificato = true;
+                } else if (lavorazioni[idx].Descrizione !== fl.Descrizione) {
+                    lavorazioni[idx].Descrizione = fl.Descrizione;
+                    modificato = true;
+                }
+            });
+
+            // 3. Aggiungi associazioni cantiere-lavorazione mancanti
+            DB_FACTORY.cantiereLavorazioni.forEach(fr => {
+                const exists = relazioni.some(r => String(r.Cantiere).trim() === String(fr.Cantiere).trim() && String(r.Lavorazione).trim() === String(fr.Lavorazione).trim());
+                if (!exists) {
+                    relazioni.push(fr);
+                    modificato = true;
+                }
+            });
+
+            // 4. Aggiungi eventuali utenti operativi mancanti
+            DB_FACTORY.utenti.forEach(fu => {
+                const exists = utenti.some(u => String(u.Matricola).trim() === String(fu.Matricola).trim() || String(u.Username).trim().toLowerCase() === String(fu.Username).trim().toLowerCase());
+                if (!exists) {
+                    utenti.push(fu);
+                    modificato = true;
+                }
+            });
+
+            return {
+                dbMerged: {
+                    utenti: utenti,
+                    cantieri: cantieri,
+                    lavorazioni: lavorazioni,
+                    cantiereLavorazioni: relazioni
+                },
+                modificato: modificato
+            };
+        }
+
+        function getSettimanaDates() {
+            const now = new Date();
+            const day = now.getDay(); // 0=Dom, 1=Lun, ..., 6=Sab
+            const diffToMon = (day === 0 ? -6 : 1 - day);
+            const mon = new Date(now);
+            mon.setDate(now.getDate() + diffToMon);
+            const fri = new Date(mon);
+            fri.setDate(mon.getDate() + 4);
+            return {
+                lun: mon.toISOString().split('T')[0],
+                ven: fri.toISOString().split('T')[0],
+                oggi: now.toISOString().split('T')[0]
+            };
+        }
+
+        function impostaSettimanaCorrente() {
+            const s = getSettimanaDates();
+            document.getElementById('rapDataDal').value = s.lun;
+            document.getElementById('rapDataAl').value = s.ven;
+            generaGiornate();
+        }
+
+        function impostaSoloOggi() {
+            const s = getSettimanaDates();
+            document.getElementById('rapDataDal').value = s.oggi;
+            document.getElementById('rapDataAl').value = s.oggi;
+            generaGiornate();
+        }
+
+        window.onload = function() {
+            const s = getSettimanaDates();
+            document.getElementById('rapDataDal').value = s.lun;
+            document.getElementById('rapDataAl').value = s.ven;
+
+            const cached = localStorage.getItem('edile_cloud_cache_v2');
+            if (cached) {
+                try {
+                    const parsed = JSON.parse(cached);
+                    parsed.utenti = pulisciUtentiSistema(parsed.utenti);
+                    DB = parsed;
+                    ordinaCantieriPerCodice();
+            ordinaUtentiPerCognome();
+                } catch(e) {}
+            }
+            const cachedRap = localStorage.getItem('edile_rapportini_cache');
+            if (cachedRap) {
+                try { RAPPORTINI_CLOUD = JSON.parse(cachedRap); } catch(e) {}
+            }
+
+            try {
+                firebase.initializeApp(firebaseConfig);
+                dbRef = firebase.database().ref('azienda_db');
+                rapRef = firebase.database().ref('rapportini_inviati');
+                firebaseAttivo = true;
+
+                dbRef.on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    document.getElementById('cloudDot').classList.add('sync-online');
+                    document.getElementById('cloudStatusText').innerText = "Cloud Sincronizzato";
+
+                    if (data && (data.utenti || data.cantieri || data.lavorazioni)) {
+                        DB = {
+                            utenti: pulisciUtentiSistema(data.utenti || []),
+                            cantieri: Array.isArray(data.cantieri) ? data.cantieri : [],
+                            lavorazioni: Array.isArray(data.lavorazioni) ? data.lavorazioni : [],
+                            cantiereLavorazioni: Array.isArray(data.cantiereLavorazioni) ? data.cantiereLavorazioni : []
+                        };
+                        ordinaCantieriPerCodice();
+            ordinaUtentiPerCognome();
+                        localStorage.setItem('edile_cloud_cache_v2', JSON.stringify(DB));
+
+                        if (ruoloAttivo === 'AMMINISTRATORE') aggiornaTabelleAdmin();
+                        if (ruoloAttivo === 'GESTORE' || !document.getElementById('screenGestore').classList.contains('hidden')) {
+                            popolaFiltriGestore();
+                        }
+                    } else {
+                        DB = JSON.parse(JSON.stringify(DB_FACTORY));
+                        salvaSuCloud();
+                    }
+                }, (error) => {
+                    document.getElementById('cloudStatusText').innerText = "Modalità Offline";
+                });
+
+                rapRef.on('value', (snapshot) => {
+                    const val = snapshot.val();
+                    const list = [];
+                    if (val) {
+                        Object.keys(val).forEach(key => {
+                            list.push({ id: key, ...val[key] });
+                        });
+                    }
+                    list.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                    RAPPORTINI_CLOUD = list;
+                    localStorage.setItem('edile_rapportini_cache', JSON.stringify(RAPPORTINI_CLOUD));
+                    if (!document.getElementById('screenGestore').classList.contains('hidden')) {
+                        popolaFiltriGestore();
+                        renderTabellaGestore();
+                    }
+                });
+            } catch (e) {
+                console.error("Errore init Firebase:", e);
+                document.getElementById('cloudStatusText').innerText = "Errore Connessione";
+            }
+        };
+
+        function salvaSuCloud() {
+            DB.utenti = pulisciUtentiSistema(DB.utenti);
+            ordinaCantieriPerCodice();
+            ordinaUtentiPerCognome();
+            localStorage.setItem('edile_cloud_cache_v2', JSON.stringify(DB));
+            if (firebaseAttivo && dbRef) {
+                document.getElementById('cloudStatusText').innerText = "Salvataggio su Cloud...";
+                dbRef.set(DB)
+                    .then(() => {
+                        document.getElementById('cloudDot').classList.add('sync-online');
+                        document.getElementById('cloudStatusText').innerText = "Cloud Sincronizzato";
+                    })
+                    .catch(err => {
+                        document.getElementById('cloudStatusText').innerText = "Errore Salvataggio Cloud";
+                        alert("Errore salvataggio Cloud: " + err.message);
+                    });
+            }
+        }
+
+        function ripristinaDatiExcel() {
+            if (confirm("Confermi il caricamento completo su Firebase dei nuovi elenchi Excel (15 cantieri, 93 lavorazioni, 213 associazioni, 26 utenti operativi)?")) {
+                DB = JSON.parse(JSON.stringify(DB_FACTORY));
+                salvaSuCloud();
+                aggiornaTabelleAdmin();
+                alert("✅ Database Cloud aggiornato con tutti i nuovi dati Excel!");
+            }
+        }
+
+        function togglePassword() {
+            const pwd = document.getElementById('loginPass');
+            pwd.type = pwd.type === 'password' ? 'text' : 'password';
+        }
+
+        function hideAllScreens() {
+            document.getElementById('screenLogin').classList.add('hidden');
+            document.getElementById('screenAdmin').classList.add('hidden');
+            document.getElementById('screenSceltaRuolo').classList.add('hidden');
+            document.getElementById('screenRapportino').classList.add('hidden');
+            document.getElementById('screenGestore').classList.add('hidden');
+            document.getElementById('mainContainer').classList.remove('wide');
+        }
+
+        function eseguiLogin() {
+            const userIn = String(document.getElementById('loginUser').value).trim().toLowerCase();
+            const passIn = String(document.getElementById('loginPass').value).trim();
+
+            let utente = SYSTEM_ACCOUNTS.find(sys => {
+                const sUser = String(sys.Username).trim().toLowerCase();
+                const sMatr = String(sys.Matricola).trim().toLowerCase();
+                return (userIn === sUser || (userIn === '1' && sUser === 'admin') || userIn === sMatr) && passIn === sys.Password;
+            });
+
+            if (!utente) {
+                utente = DB.utenti.find(u => {
+                    const dbUser = String(u.Username || '').trim().toLowerCase();
+                    const dbMatr = String(u.Matricola || '').trim().toLowerCase();
+                    const dbPass = String(u.Password || '').trim();
+                    return (userIn === dbUser || userIn === dbMatr) && passIn === dbPass;
+                });
+            }
+
+            if (!utente) {
+                document.getElementById('loginError').classList.remove('hidden');
+                return;
+            }
+
+            document.getElementById('loginError').classList.add('hidden');
+            utenteAttuale = utente;
+            document.getElementById('userBadge').classList.remove('hidden');
+
+            const ruoloBruto = String(utente.Ruolo || '').toUpperCase();
+            const nomeCompleto = `${utente.Cognome || ''} ${utente.Nome || ''}`.trim();
+
+            if (ruoloBruto.includes('AMMINISTRATORE')) {
+                ruoloAttivo = 'AMMINISTRATORE';
+                document.getElementById('badgeRole').innerText = "ADMIN (Ufficio): " + nomeCompleto;
+                mostraPannelloAdmin();
+            } else if (ruoloBruto.includes('GESTORE')) {
+                ruoloAttivo = 'GESTORE';
+                document.getElementById('badgeRole').innerText = "GESTORE: " + nomeCompleto;
+                mostraPannelloGestore(false);
+            } else if (ruoloBruto.includes(",") || ruoloBruto.includes('TECNICO')) {
+                hideAllScreens();
+                const btnSup = document.getElementById('btnSceltaSupervisore');
+                const btnPers = document.getElementById('btnSceltaPersonale');
+                if (ruoloBruto.includes('TECNICO')) {
+                    btnSup.innerText = "Accedi come TECNICO (compila per gli operai)";
+                    btnSup.setAttribute("onclick", "selezionaRuolo('TECNICO')");
+                    btnPers.innerText = "Accedi come TECNICO (solo le mie ore)";
+                    btnPers.setAttribute("onclick", "selezionaRuolo('TECNICO_PERSONALE')");
+                } else {
+                    btnSup.innerText = "Accedi come CAPOCANTIERE (compila per gli operai)";
+                    btnSup.setAttribute("onclick", "selezionaRuolo('CAPOCANTIERE')");
+                    btnPers.innerText = "Accedi come OPERAIO (solo le mie ore)";
+                    btnPers.setAttribute("onclick", "selezionaRuolo('OPERAIO')");
+                }
+                document.getElementById('screenSceltaRuolo').classList.remove('hidden');
+            } else {
+                ruoloAttivo = ruoloBruto;
+                document.getElementById('badgeRole').innerText = ruoloAttivo + ": " + nomeCompleto;
+                mostraRapportino();
+            }
+        }
+
+        function selezionaRuolo(r) {
+            ruoloAttivo = r;
+            const nomeCompleto = `${utenteAttuale.Cognome || ''} ${utenteAttuale.Nome || ''}`.trim();
+            const labelRuolo = r === 'TECNICO_PERSONALE' ? 'TECNICO (Personale)' : ruoloAttivo;
+            document.getElementById('badgeRole').innerText = labelRuolo + ": " + nomeCompleto;
+            mostraRapportino();
+        }
+
+        function logout() {
+            utenteAttuale = null;
+            ruoloAttivo = null;
+            adminAnnullaModificaCantiere();
+            adminAnnullaModificaUtente();
+            adminAnnullaModificaLavorazione();
+            document.getElementById('userBadge').classList.add('hidden');
+            hideAllScreens();
+            document.getElementById('screenLogin').classList.remove('hidden');
+            document.getElementById('loginPass').value = '';
+        }
+
+        function mostraPannelloAdmin() {
+            hideAllScreens();
+            document.getElementById('screenAdmin').classList.remove('hidden');
+            aggiornaTabelleAdmin();
+        }
+
+        function aggiornaTabelleAdmin() {
+            ordinaCantieriPerCodice();
+            ordinaUtentiPerCognome();
+            document.querySelector('#admTblCantieri tbody').innerHTML = DB.cantieri.map((c, idx) => `
+                <tr class="${editIdxCantiere === idx ? 'editing-row' : ''}">
+                    <td><b>${c.Codice}</b></td>
+                    <td>${c.Descrizione}</td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="btn btn-info btn-sm" onclick="adminPreparaModificaCantiere(${idx})">Modifica</button>
+                            <button class="btn btn-danger btn-sm" onclick="adminElimina('cantieri', ${idx})">Elimina</button>
+                        </div>
+                    </td>
+                </tr>`).join('');
+
+            const utentiVisibili = pulisciUtentiSistema(DB.utenti);
+            document.querySelector('#admTblUtenti tbody').innerHTML = utentiVisibili.map((u, idx) => `
+                <tr class="${editIdxUtente === idx ? 'editing-row' : ''}">
+                    <td>${u.Matricola}</td>
+                    <td>${u.Cognome} ${u.Nome}</td>
+                    <td><code>${u.Username}</code> / <code>${u.Password}</code></td>
+                    <td>${u.Ruolo}</td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="btn btn-info btn-sm" onclick="adminPreparaModificaUtente(${idx})">Modifica</button>
+                            <button class="btn btn-danger btn-sm" onclick="adminElimina('utenti', ${idx})">Elimina</button>
+                        </div>
+                    </td>
+                </tr>`).join('');
+
+            document.querySelector('#admTblLavorazioni tbody').innerHTML = DB.lavorazioni.map((l, idx) => `
+                <tr class="${editIdxLavorazione === idx ? 'editing-row' : ''}">
+                    <td><b>${l.Codice}</b></td>
+                    <td>${l.Descrizione}</td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="btn btn-info btn-sm" onclick="adminPreparaModificaLavorazione(${idx})">Modifica</button>
+                            <button class="btn btn-danger btn-sm" onclick="adminElimina('lavorazioni', ${idx})">Elimina</button>
+                        </div>
+                    </td>
+                </tr>`).join('');
+
+            const selRelCant = document.getElementById('admRelCant');
+            const prevCant = selRelCant.value;
+            selRelCant.innerHTML = DB.cantieri.map(c => `<option value="${c.Codice}">${c.Codice} - ${c.Descrizione}</option>`).join('');
+            if (prevCant && DB.cantieri.some(c => c.Codice === prevCant)) {
+                selRelCant.value = prevCant;
+            }
+            onCambiaCantiereRelazioni();
+
+            renderRelazioniRaggruppate();
+        }
+
+        // --- CRUD CANTIERI ---
+        function adminPreparaModificaCantiere(idx) {
+            editIdxCantiere = idx;
+            const c = DB.cantieri[idx];
+            document.getElementById('admCantCod').value = c.Codice;
+            document.getElementById('admCantDesc').value = c.Descrizione;
+            document.getElementById('boxAdminCantieri').classList.add('edit-mode');
+            document.getElementById('btnSalvaCantiere').innerText = "💾 Salva Modifiche";
+            document.getElementById('btnAnnullaCantiere').classList.remove('hidden');
+            aggiornaTabelleAdmin();
+        }
+
+        function adminAnnullaModificaCantiere() {
+            editIdxCantiere = -1;
+            document.getElementById('admCantCod').value = '';
+            document.getElementById('admCantDesc').value = '';
+            document.getElementById('boxAdminCantieri').classList.remove('edit-mode');
+            document.getElementById('btnSalvaCantiere').innerText = "+ Aggiungi Cantiere";
+            document.getElementById('btnAnnullaCantiere').classList.add('hidden');
+            aggiornaTabelleAdmin();
+        }
+
+        function adminSalvaCantiere() {
+            const cod = document.getElementById('admCantCod').value.trim().toUpperCase();
+            const desc = document.getElementById('admCantDesc').value.trim();
+            if (!cod || !desc) return alert("Compila sia Codice che Descrizione.");
+
+            if (editIdxCantiere > -1) {
+                const vecchioCodice = DB.cantieri[editIdxCantiere].Codice;
+                DB.cantieri[editIdxCantiere] = { Codice: cod, Descrizione: desc };
+                if (vecchioCodice !== cod) {
+                    DB.cantiereLavorazioni.forEach(r => { if (r.Cantiere === vecchioCodice) r.Cantiere = cod; });
+                }
+                adminAnnullaModificaCantiere();
+            } else {
+                DB.cantieri.push({ Codice: cod, Descrizione: desc });
+                document.getElementById('admCantCod').value = '';
+                document.getElementById('admCantDesc').value = '';
+            }
+            salvaSuCloud();
+            aggiornaTabelleAdmin();
+        }
+
+        // --- CRUD UTENTI ---
+        function adminPreparaModificaUtente(idx) {
+            editIdxUtente = idx;
+            const u = DB.utenti[idx];
+            document.getElementById('admUsrMatr').value = u.Matricola;
+            document.getElementById('admUsrUser').value = u.Username;
+            document.getElementById('admUsrPass').value = u.Password;
+            document.getElementById('admUsrNome').value = u.Nome;
+            document.getElementById('admUsrCogn').value = u.Cognome;
+            document.getElementById('admUsrRuolo').value = u.Ruolo;
+
+            document.getElementById('boxAdminUtenti').classList.add('edit-mode');
+            document.getElementById('btnSalvaUtente').innerText = "💾 Salva Modifiche";
+            document.getElementById('btnAnnullaUtente').classList.remove('hidden');
+            aggiornaTabelleAdmin();
+        }
+
+        function adminAnnullaModificaUtente() {
+            editIdxUtente = -1;
+            ['admUsrMatr', 'admUsrUser', 'admUsrPass', 'admUsrNome', 'admUsrCogn'].forEach(id => document.getElementById(id).value = '');
+            document.getElementById('admUsrRuolo').value = 'OPERAIO';
+            document.getElementById('boxAdminUtenti').classList.remove('edit-mode');
+            document.getElementById('btnSalvaUtente').innerText = "+ Aggiungi Dipendente";
+            document.getElementById('btnAnnullaUtente').classList.add('hidden');
+            aggiornaTabelleAdmin();
+        }
+
+        function adminSalvaUtente() {
+            const matr = document.getElementById('admUsrMatr').value.trim();
+            const user = document.getElementById('admUsrUser').value.trim().toLowerCase();
+            const pass = document.getElementById('admUsrPass').value.trim();
+            const nome = document.getElementById('admUsrNome').value.trim();
+            const cogn = document.getElementById('admUsrCogn').value.trim();
+            const ruolo = document.getElementById('admUsrRuolo').value;
+
+            if (!matr || !user || !pass || !nome || !cogn) return alert("Compila tutti i campi del dipendente.");
+            const nuovoObj = { Matricola: matr, Username: user, Password: pass, Nome: nome, Cognome: cogn, Ruolo: ruolo };
+
+            if (editIdxUtente > -1) {
+                DB.utenti[editIdxUtente] = nuovoObj;
+                adminAnnullaModificaUtente();
+            } else {
+                DB.utenti.push(nuovoObj);
+                ['admUsrMatr', 'admUsrUser', 'admUsrPass', 'admUsrNome', 'admUsrCogn'].forEach(id => document.getElementById(id).value = '');
+            }
+            salvaSuCloud();
+            aggiornaTabelleAdmin();
+        }
+
+        // --- CRUD LAVORAZIONI ---
+        function adminPreparaModificaLavorazione(idx) {
+            editIdxLavorazione = idx;
+            const l = DB.lavorazioni[idx];
+            document.getElementById('admLavCod').value = l.Codice;
+            document.getElementById('admLavDesc').value = l.Descrizione;
+            document.getElementById('boxAdminLavorazioni').classList.add('edit-mode');
+            document.getElementById('btnSalvaLavorazione').innerText = "💾 Salva Modifiche";
+            document.getElementById('btnAnnullaLavorazione').classList.remove('hidden');
+            aggiornaTabelleAdmin();
+        }
+
+        function adminAnnullaModificaLavorazione() {
+            editIdxLavorazione = -1;
+            document.getElementById('admLavCod').value = '';
+            document.getElementById('admLavDesc').value = '';
+            document.getElementById('boxAdminLavorazioni').classList.remove('edit-mode');
+            document.getElementById('btnSalvaLavorazione').innerText = "+ Aggiungi Lavorazione";
+            document.getElementById('btnAnnullaLavorazione').classList.add('hidden');
+            aggiornaTabelleAdmin();
+        }
+
+        function adminSalvaLavorazione() {
+            const cod = document.getElementById('admLavCod').value.trim().toUpperCase();
+            const desc = document.getElementById('admLavDesc').value.trim();
+            if (!cod || !desc) return alert("Compila sia Codice che Descrizione.");
+
+            if (editIdxLavorazione > -1) {
+                const vecchioCodice = DB.lavorazioni[editIdxLavorazione].Codice;
+                DB.lavorazioni[editIdxLavorazione] = { Codice: cod, Descrizione: desc };
+                if (vecchioCodice !== cod) {
+                    DB.cantiereLavorazioni.forEach(r => { if (r.Lavorazione === vecchioCodice) r.Lavorazione = cod; });
+                }
+                adminAnnullaModificaLavorazione();
+            } else {
+                DB.lavorazioni.push({ Codice: cod, Descrizione: desc });
+                document.getElementById('admLavCod').value = '';
+                document.getElementById('admLavDesc').value = '';
+            }
+            salvaSuCloud();
+            aggiornaTabelleAdmin();
+        }
+
+        let relSelectedSet = new Set();
+
+        function onCambiaCantiereRelazioni() {
+            const c = document.getElementById('admRelCant').value;
+            relSelectedSet = new Set(
+                DB.cantiereLavorazioni
+                    .filter(r => String(r.Cantiere).trim() === String(c).trim())
+                    .map(r => String(r.Lavorazione).trim())
+            );
+            renderChecklistLavorazioni();
+            aggiornaTriggerRelazioniText();
+        }
+
+        function renderChecklistLavorazioni() {
+            const c = document.getElementById('admRelCant').value;
+            const query = (document.getElementById('admRelSearch').value || '').trim().toLowerCase();
+            const giaEsistenti = new Set(
+                DB.cantiereLavorazioni
+                    .filter(r => String(r.Cantiere).trim() === String(c).trim())
+                    .map(r => String(r.Lavorazione).trim())
+            );
+
+            const filtered = DB.lavorazioni.filter(l => {
+                if (!query) return true;
+                return String(l.Codice).toLowerCase().includes(query) || String(l.Descrizione).toLowerCase().includes(query);
+            });
+
+            const listEl = document.getElementById('admRelChecklist');
+            if (filtered.length === 0) {
+                listEl.innerHTML = '<div style="padding:10px; color:var(--text-muted); font-size:0.84rem;">Nessuna lavorazione trovata.</div>';
+                return;
+            }
+
+            listEl.innerHTML = filtered.map(l => {
+                const cod = String(l.Codice).trim();
+                const checked = relSelectedSet.has(cod);
+                const wasLinked = giaEsistenti.has(cod);
+                return `
+                <label class="multi-select-item ${wasLinked ? 'already-linked' : ''}">
+                    <input type="checkbox" value="${cod}" ${checked ? 'checked' : ''} onchange="onToggleCheckboxRelazione('${cod}', this.checked)">
+                    <span><b>${cod}</b> - ${l.Descrizione} ${wasLinked ? '<span style="font-size:0.72rem; color:#15803d; font-weight:700;">(già associata)</span>' : ''}</span>
+                </label>`;
+            }).join('');
+        }
+
+        function onToggleCheckboxRelazione(cod, isChecked) {
+            if (isChecked) {
+                relSelectedSet.add(cod);
+            } else {
+                relSelectedSet.delete(cod);
+            }
+            aggiornaTriggerRelazioniText();
+        }
+
+        function aggiornaTriggerRelazioniText() {
+            const count = relSelectedSet.size;
+            const span = document.getElementById('admRelTriggerText');
+            if (count === 0) {
+                span.innerText = "Nessuna lavorazione flaggata (clicca per aprire)";
+            } else if (count === 1) {
+                const onlyCod = Array.from(relSelectedSet)[0];
+                span.innerText = `1 lavorazione flaggata (${onlyCod})`;
+            } else {
+                span.innerText = `${count} lavorazioni flaggate (clicca per modificare)`;
+            }
+        }
+
+        function toggleDropdownRelazioni() {
+            const dd = document.getElementById('admRelDropdown');
+            dd.classList.toggle('hidden');
+            if (!dd.classList.contains('hidden')) {
+                document.getElementById('admRelSearch').focus();
+            }
+        }
+
+        function chiudiDropdownRelazioni() {
+            document.getElementById('admRelDropdown').classList.add('hidden');
+        }
+
+        function filtraChecklistLavorazioni() {
+            renderChecklistLavorazioni();
+        }
+
+        function selezionaTutteRelazioni(flag) {
+            const query = (document.getElementById('admRelSearch').value || '').trim().toLowerCase();
+            DB.lavorazioni.forEach(l => {
+                const cod = String(l.Codice).trim();
+                const match = !query || cod.toLowerCase().includes(query) || String(l.Descrizione).toLowerCase().includes(query);
+                if (match) {
+                    if (flag) relSelectedSet.add(cod);
+                    else relSelectedSet.delete(cod);
+                }
+            });
+            renderChecklistLavorazioni();
+            aggiornaTriggerRelazioniText();
+        }
+
+        function adminSalvaAssociazioniMulti() {
+            const c = document.getElementById('admRelCant').value;
+            if (!c) return alert("Seleziona prima un cantiere.");
+
+            // Manteniamo le relazioni degli altri cantieri e sostituiamo quelle del cantiere selezionato con i flag attivi
+            const altreRelazioni = DB.cantiereLavorazioni.filter(r => String(r.Cantiere).trim() !== String(c).trim());
+            const nuoveRelazioniCantiere = Array.from(relSelectedSet).map(lavCod => ({
+                Cantiere: c,
+                Lavorazione: lavCod
+            }));
+
+            DB.cantiereLavorazioni = [...altreRelazioni, ...nuoveRelazioniCantiere];
+            chiudiDropdownRelazioni();
+            salvaSuCloud();
+            aggiornaTabelleAdmin();
+            relOpenCantieriSet.add(String(c).trim());
+            aggiornaTabelleAdmin();
+            alert(`✅ Salvate ${nuoveRelazioniCantiere.length} lavorazioni consentite per il cantiere ${c}!`);
+        }
+
+        document.addEventListener('click', function(e) {
+            const box = document.getElementById('admRelMultiBox');
+            if (box && !box.contains(e.target)) {
+                chiudiDropdownRelazioni();
+            }
+        });
+
+        let relOpenCantieriSet = new Set();
+
+        function toggleGruppoCantiereRel(codCantiere) {
+            if (relOpenCantieriSet.has(codCantiere)) {
+                relOpenCantieriSet.delete(codCantiere);
+            } else {
+                relOpenCantieriSet.add(codCantiere);
+            }
+            renderRelazioniRaggruppate();
+        }
+
+        function espandiComprimiTuttiCantieriRel(apri) {
+            if (apri) {
+                DB.cantiereLavorazioni.forEach(r => relOpenCantieriSet.add(String(r.Cantiere).trim()));
+            } else {
+                relOpenCantieriSet.clear();
+            }
+            renderRelazioniRaggruppate();
+        }
+
+        function renderRelazioniRaggruppate() {
+            const container = document.getElementById('admRelGroupsContainer');
+            if (!container) return;
+
+            if (!DB.cantiereLavorazioni || DB.cantiereLavorazioni.length === 0) {
+                container.innerHTML = '<div style="padding:12px; color:var(--text-muted); font-size:0.85rem;">Nessuna associazione configurata.</div>';
+                return;
+            }
+
+            // Raggruppiamo mantenendo l'indice originale in DB.cantiereLavorazioni per l'eliminazione diretta
+            const gruppiMap = new Map();
+            DB.cantiereLavorazioni.forEach((r, idx) => {
+                const cod = String(r.Cantiere).trim();
+                if (!gruppiMap.has(cod)) {
+                    const cantObj = DB.cantieri.find(c => String(c.Codice).trim() === cod);
+                    const desc = cantObj ? cantObj.Descrizione : 'Cantiere non in anagrafica';
+                    gruppiMap.set(cod, { codice: cod, descrizione: desc, items: [] });
+                }
+                const lavCod = String(r.Lavorazione).trim();
+                const lavObj = DB.lavorazioni.find(l => String(l.Codice).trim() === lavCod);
+                const lavDesc = lavObj ? lavObj.Descrizione : '';
+                gruppiMap.get(cod).items.push({ idx, lavCod, lavDesc });
+            });
+
+            // Ordiniamo i gruppi secondo l'ordine dei cantieri in anagrafica
+            const ordineCantieri = DB.cantieri.map(c => String(c.Codice).trim());
+            const gruppiOrdinati = Array.from(gruppiMap.values()).sort((a, b) => {
+                const ia = ordineCantieri.indexOf(a.codice);
+                const ib = ordineCantieri.indexOf(b.codice);
+                if (ia === -1 && ib === -1) return a.codice.localeCompare(b.codice);
+                if (ia === -1) return 1;
+                if (ib === -1) return -1;
+                return ia - ib;
+            });
+
+            container.innerHTML = gruppiOrdinati.map(g => {
+                const isOpen = relOpenCantieriSet.has(g.codice);
+                const arrow = isOpen ? '▼' : '▶';
+                const rowsHtml = isOpen ? g.items.map(it => `
+                    <tr>
+                        <td style="width:110px;"><b>${it.lavCod}</b></td>
+                        <td>${it.lavDesc || '<span style="color:var(--text-muted);">-</span>'}</td>
+                        <td style="width:90px; text-align:right;">
+                            <button class="btn btn-danger btn-sm" onclick="adminElimina('cantiereLavorazioni', ${it.idx})">Rimuovi</button>
+                        </td>
+                    </tr>`).join('') : '';
+
+                return `
+                <div class="rel-cant-group">
+                    <div class="rel-cant-header" onclick="toggleGruppoCantiereRel('${g.codice}')">
+                        <div class="rel-cant-title">
+                            <span style="font-size:0.8rem; width:14px; display:inline-block;">${arrow}</span>
+                            <span><b>${g.codice}</b> - ${g.descrizione}</span>
+                        </div>
+                        <span class="rel-cant-count">${g.items.length} lavorazion${g.items.length === 1 ? 'e' : 'i'}</span>
+                    </div>
+                    ${isOpen ? `
+                    <div class="rel-cant-body">
+                        <table>
+                            <tbody>${rowsHtml}</tbody>
+                        </table>
+                    </div>` : ''}
+                </div>`;
+            }).join('');
+        }
+
+        function adminElimina(collezione, indice) {
+            if (confirm("Confermi l'eliminazione? La modifica sarà immediata per tutti.")) {
+                if (collezione === 'cantieri' && editIdxCantiere === indice) adminAnnullaModificaCantiere();
+                if (collezione === 'utenti' && editIdxUtente === indice) adminAnnullaModificaUtente();
+                if (collezione === 'lavorazioni' && editIdxLavorazione === indice) adminAnnullaModificaLavorazione();
+
+                DB[collezione].splice(indice, 1);
+                salvaSuCloud();
+                aggiornaTabelleAdmin();
+            }
+        }
+
+        // ============================================================
+        // COMPILAZIONE RAPPORTINO SETTIMANALE / MULTI-CANTIERE
+        // ============================================================
+        function getOptionsCantieriHtml(selectedCod = '') {
+            ordinaCantieriPerCodice();
+            ordinaUtentiPerCognome();
+            return '<option value="">-- Seleziona Cantiere --</option>' +
+                DB.cantieri.map(c => `<option value="${c.Codice}" ${c.Codice === selectedCod ? 'selected' : ''}>${c.Codice} - ${c.Descrizione}</option>`).join('');
+        }
+
+        function getOptionsLavorazioniHtml(cantiereCod, selectedLav = '') {
+            if (!cantiereCod) return '<option value="">-- Seleziona prima il cantiere --</option>';
+            const consentiti = DB.cantiereLavorazioni.filter(r => r.Cantiere === cantiereCod).map(r => r.Lavorazione);
+            const mansioni = DB.lavorazioni.filter(l => consentiti.includes(l.Codice));
+            if (mansioni.length > 0) {
+                return '<option value="">-- Seleziona Lavorazione --</option>' +
+                    mansioni.map(m => `<option value="${m.Codice}" ${m.Codice === selectedLav ? 'selected' : ''}>${m.Codice} - ${m.Descrizione}</option>`).join('');
+            }
+            return `<option value="GENERICA" ${selectedLav === 'GENERICA' ? 'selected' : ''}>Nessuna lavorazione specifica - Generica</option>`;
+        }
+
+        function creaBloccoAttivitaHtml(oreDefault = 8, isPrimaRiga = true, preset = null) {
+            const cantSel = preset ? preset.cantiere : '';
+            const lavSel = preset ? preset.lavorazione : '';
+            const ordVal = preset ? preset.ordinarie : oreDefault;
+            const strVal = preset ? preset.straordinari : 0;
+            const ferVal = preset ? preset.ferie : 0;
+            const cigVal = preset ? preset.cig : 0;
+            const noteVal = preset ? (preset.note || '') : '';
+
+            return `
+            <div class="attivita-row">
+                <div class="attivita-header">
+                    <span>Cantiere / Attività</span>
+                    ${!isPrimaRiga ? `<button type="button" class="btn btn-danger btn-sm" style="padding:2px 7px; font-size:0.72rem;" onclick="rimuoviRigaAttivita(this)">✕ Rimuovi</button>` : ''}
+                </div>
+                <div class="row">
+                    <div>
+                        <label>Cantiere</label>
+                        <select class="att-cantiere" onchange="onCambiaCantiereRiga(this)">
+                            ${getOptionsCantieriHtml(cantSel)}
+                        </select>
+                    </div>
+                    <div>
+                        <label>Lavorazione</label>
+                        <select class="att-lavorazione">
+                            ${getOptionsLavorazioniHtml(cantSel, lavSel)}
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div><label>Ore Ordinarie</label><input type="number" class="g-ore" min="0" max="14" step="0.5" value="${ordVal}"></div>
+                    <div><label>Straordinari</label><input type="number" class="g-straord" min="0" max="8" step="0.5" value="${strVal}"></div>
+                    <div><label>Ferie / Perm.</label><input type="number" class="g-ferie" min="0" max="8" step="0.5" value="${ferVal}"></div>
+                    <div><label>C. Integrazione</label><input type="number" class="g-cig" min="0" max="8" step="0.5" value="${cigVal}"></div>
+                </div>
+                <div><label>Note / Eventi</label><input type="text" class="g-note" value="${noteVal.replace(/"/g, '&quot;')}" placeholder="Es. pioggia, trasferimento cantiere, materiale..."></div>
+            </div>`;
+        }
+
+        function onCambiaCantiereRiga(selectCant) {
+            const row = selectCant.closest('.attivita-row');
+            const selectLav = row.querySelector('.att-lavorazione');
+            selectLav.innerHTML = getOptionsLavorazioniHtml(selectCant.value, '');
+        }
+
+        function aggiungiRigaAttivita(btn) {
+            const card = btn.closest('.giorno-card');
+            const list = card.querySelector('.attivita-list');
+            list.insertAdjacentHTML('beforeend', creaBloccoAttivitaHtml(0, false, null));
+        }
+
+        function rimuoviRigaAttivita(btn) {
+            const row = btn.closest('.attivita-row');
+            row.remove();
+        }
+
+        function copiaDalGiornoPrecedente(btn) {
+            const card = btn.closest('.giorno-card');
+            const prevCard = card.previousElementSibling;
+            if (!prevCard || !prevCard.classList.contains('giorno-card')) return;
+
+            const prevRows = prevCard.querySelectorAll('.attivita-row');
+            if (prevRows.length === 0) return;
+
+            const list = card.querySelector('.attivita-list');
+            list.innerHTML = '';
+            prevRows.forEach((pRow, idx) => {
+                const preset = {
+                    cantiere: pRow.querySelector('.att-cantiere').value,
+                    lavorazione: pRow.querySelector('.att-lavorazione').value,
+                    ordinarie: pRow.querySelector('.g-ore').value,
+                    straordinari: pRow.querySelector('.g-straord').value,
+                    ferie: pRow.querySelector('.g-ferie').value,
+                    cig: pRow.querySelector('.g-cig').value,
+                    note: pRow.querySelector('.g-note').value
+                };
+                list.insertAdjacentHTML('beforeend', creaBloccoAttivitaHtml(8, idx === 0, preset));
+            });
+        }
+
+        function mostraRapportino() {
+            hideAllScreens();
+            document.getElementById('screenRapportino').classList.remove('hidden');
+            document.getElementById('rapEsitoInvio').classList.add('hidden');
+            const labelTitolo = ruoloAttivo === 'TECNICO_PERSONALE' ? 'TECNICO (Ore Personali)' : ruoloAttivo;
+            document.getElementById('titoloCompilazione').innerText = "Rapportino - Modalità " + labelTitolo;
+
+            const boxS = document.getElementById('boxSquadra');
+            if (ruoloAttivo === 'CAPOCANTIERE' || ruoloAttivo === 'TECNICO') {
+                boxS.classList.remove('hidden');
+                const selO = document.getElementById('rapOperaio');
+                ordinaUtentiPerCognome();
+                const operai = DB.utenti.filter(u => String(u.Ruolo || '').toUpperCase().includes('OPERAIO'));
+                selO.innerHTML = '<option value="">-- Seleziona lavoratore --</option>' + 
+                    operai.map(u => `<option value="${u.Matricola}">${u.Cognome} ${u.Nome} (Matr. ${u.Matricola})</option>`).join('');
+            } else {
+                boxS.classList.add('hidden');
+            }
+            generaGiornate();
+        }
+
+        function generaGiornate() {
+            const dal = document.getElementById('rapDataDal').value;
+            const al = document.getElementById('rapDataAl').value;
+            const container = document.getElementById('giornateContainer');
+            
+            if(!dal || !al) return;
+            let d1 = new Date(dal), d2 = new Date(al);
+            if(d2 < d1) {
+                container.innerHTML = '<div class="alert alert-warning">La Data Iniziale deve essere precedente o uguale a quella Finale.</div>';
+                return;
+            }
+            
+            let html = '';
+            const fmt = new Intl.DateTimeFormat('it-IT', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+            let currentD = new Date(Date.UTC(d1.getFullYear(), d1.getMonth(), d1.getDate()));
+            let endD = new Date(Date.UTC(d2.getFullYear(), d2.getMonth(), d2.getDate()));
+            let dayIndex = 0;
+
+            while(currentD <= endD) {
+                let dateStr = currentD.toISOString().split('T')[0];
+                let displayDate = fmt.format(currentD);
+                displayDate = displayDate.charAt(0).toUpperCase() + displayDate.slice(1);
+                let dayOfWeek = currentD.getUTCDay();
+                let oreDefault = (dayOfWeek === 0 || dayOfWeek === 6) ? 0 : 8;
+
+                html += `
+                <div class="giorno-card" data-date="${dateStr}">
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #cbd5e1; padding-bottom:6px; margin-bottom:10px; gap:6px; flex-wrap:wrap;">
+                        <h4 style="border:none; margin:0; padding:0;">${displayDate}</h4>
+                        ${dayIndex > 0 ? `<button type="button" class="btn btn-outline btn-sm" style="font-size:0.72rem; padding:3px 8px;" onclick="copiaDalGiornoPrecedente(this)">📋 Copia da giorno prec.</button>` : ''}
+                    </div>
+                    <div class="attivita-list">
+                        ${creaBloccoAttivitaHtml(oreDefault, true, null)}
+                    </div>
+                    <button type="button" class="btn-add-att" onclick="aggiungiRigaAttivita(this)">+ Aggiungi altro cantiere in questo giorno</button>
+                </div>`;
+                currentD.setUTCDate(currentD.getUTCDate() + 1);
+                dayIndex++;
+            }
+            container.innerHTML = html;
+        }
+
+        function raccogliDatiRapportino() {
+            let lavoratoreNome = `${utenteAttuale.Cognome} ${utenteAttuale.Nome}`.trim();
+            let lavoratoreMatricola = String(utenteAttuale.Matricola || '');
+
+            if (ruoloAttivo === 'CAPOCANTIERE' || ruoloAttivo === 'TECNICO') {
+                const selO = document.getElementById('rapOperaio');
+                if (!selO.value) { alert("Seleziona il lavoratore."); return null; }
+                lavoratoreMatricola = selO.value;
+                const opObj = DB.utenti.find(u => String(u.Matricola) === String(lavoratoreMatricola));
+                lavoratoreNome = opObj ? `${opObj.Cognome} ${opObj.Nome}`.trim() : selO.options[selO.selectedIndex].text;
+            }
+
+            const dataDal = document.getElementById('rapDataDal').value;
+            const dataAl = document.getElementById('rapDataAl').value;
+
+            const schede = document.querySelectorAll('.giorno-card');
+            let giornate = [];
+            let cantieriUsatiMap = {};
+            let lavorazioniUsateMap = {};
+            let tO = 0, tS = 0, tF = 0, tC = 0;
+            let erroreValidazione = null;
+
+            schede.forEach(card => {
+                if (erroreValidazione) return;
+                let dataIso = card.getAttribute('data-date');
+                let dIt = dataIso.split('-').reverse().join('/');
+                const righeAtt = card.querySelectorAll('.attivita-row');
+
+                righeAtt.forEach(row => {
+                    if (erroreValidazione) return;
+                    let cantiereCod = row.querySelector('.att-cantiere').value;
+                    let lavorazioneCod = row.querySelector('.att-lavorazione').value;
+                    let valO = parseFloat(row.querySelector('.g-ore').value) || 0;
+                    let valS = parseFloat(row.querySelector('.g-straord').value) || 0;
+                    let valF = parseFloat(row.querySelector('.g-ferie').value) || 0;
+                    let valC = parseFloat(row.querySelector('.g-cig').value) || 0;
+                    let note = row.querySelector('.g-note').value.trim();
+
+                    const hasHoursOrNote = (valO > 0 || valS > 0 || valF > 0 || valC > 0 || note !== '');
+                    if (!hasHoursOrNote) return;
+
+                    if (!cantiereCod || !lavorazioneCod) {
+                        erroreValidazione = `Nella giornata del ${dIt} hai inserito delle ore o note senza selezionare Cantiere e Lavorazione.`;
+                        return;
+                    }
+
+                    const cantObj = DB.cantieri.find(c => c.Codice === cantiereCod);
+                    const lavObj = DB.lavorazioni.find(l => l.Codice === lavorazioneCod);
+                    const cantiereDesc = cantObj ? `${cantObj.Codice} - ${cantObj.Descrizione}` : cantiereCod;
+                    const lavorazioneDesc = lavObj ? `${lavObj.Codice} - ${lavObj.Descrizione}` : lavorazioneCod;
+
+                    cantieriUsatiMap[cantiereCod] = cantiereDesc;
+                    lavorazioniUsateMap[lavorazioneCod] = lavorazioneDesc;
+
+                    giornate.push({
+                        data: dataIso,
+                        cantiereCodice: cantiereCod,
+                        cantiereDescrizione: cantiereDesc,
+                        lavorazioneCodice: lavorazioneCod,
+                        lavorazioneDescrizione: lavorazioneDesc,
+                        ordinarie: valO,
+                        straordinari: valS,
+                        ferie: valF,
+                        cig: valC,
+                        note: note
+                    });
+
+                    tO += valO; tS += valS; tF += valF; tC += valC;
+                });
+            });
+
+            if (erroreValidazione) {
+                alert(erroreValidazione);
+                return null;
+            }
+
+            if (giornate.length === 0) {
+                alert("Nessun dato orario inserito. Inserisci almeno un cantiere con relative ore.");
+                return null;
+            }
+
+            const codiciCantieri = Object.keys(cantieriUsatiMap);
+            const descCantieriList = Object.values(cantieriUsatiMap);
+            const descLavorazioniList = Object.values(lavorazioniUsateMap);
+
+            const now = new Date();
+            const dataInvioStr = now.toLocaleDateString('it-IT') + ' ' + now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+
+            return {
+                timestamp: now.getTime(),
+                dataInvio: dataInvioStr,
+                dataDal: dataDal,
+                dataAl: dataAl,
+                cantiereCodice: codiciCantieri.length === 1 ? codiciCantieri[0] : 'MULTI',
+                cantieriCoinvolti: codiciCantieri,
+                cantiereDescrizione: descCantieriList.join(' | '),
+                lavorazioneCodice: Object.keys(lavorazioniUsateMap).length === 1 ? Object.keys(lavorazioniUsateMap)[0] : 'MULTI',
+                lavorazioneDescrizione: descLavorazioniList.join(' | '),
+                lavoratoreMatricola: lavoratoreMatricola,
+                lavoratoreNome: lavoratoreNome,
+                compilatoDa: `${utenteAttuale.Cognome} ${utenteAttuale.Nome} (${ruoloAttivo === 'TECNICO_PERSONALE' ? 'TECNICO' : ruoloAttivo})`,
+                giornate: giornate,
+                totaleOrdinarie: tO,
+                totaleStraordinari: tS,
+                totaleFerie: tF,
+                totaleCig: tC,
+                stato: 'NUOVO'
+            };
+        }
+
+        function inviaRapportinoCloud() {
+            const rap = raccogliDatiRapportino();
+            if (!rap) return;
+
+            const btn = document.getElementById('btnInviaCloud');
+            btn.disabled = true;
+            btn.innerText = "Invio in corso...";
+
+            if (firebaseAttivo && rapRef) {
+                rapRef.push(rap)
+                    .then(() => {
+                        btn.disabled = false;
+                        btn.innerText = "📤 Invia Rapportino in Ufficio";
+                        const box = document.getElementById('rapEsitoInvio');
+                        box.innerHTML = `✅ <strong>Rapportino inviato con successo in Ufficio!</strong><br>Lavoratore: ${rap.lavoratoreNome} | Cantieri: ${rap.cantiereDescrizione}<br>Totale Ore: ${rap.totaleOrdinarie}h ord. + ${rap.totaleStraordinari}h str.`;
+                        box.classList.remove('hidden');
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    })
+                    .catch(err => {
+                        btn.disabled = false;
+                        btn.innerText = "📤 Invia Rapportino in Ufficio";
+                        alert("Errore durante l'invio: " + err.message);
+                    });
+            } else {
+                rap.id = 'local_' + Date.now();
+                RAPPORTINI_CLOUD.unshift(rap);
+                localStorage.setItem('edile_rapportini_cache', JSON.stringify(RAPPORTINI_CLOUD));
+                btn.disabled = false;
+                btn.innerText = "📤 Invia Rapportino in Ufficio";
+                const box = document.getElementById('rapEsitoInvio');
+                box.innerHTML = `✅ <strong>Rapportino salvato!</strong> (Modalità offline: verrà sincronizzato appena torna connessione).`;
+                box.classList.remove('hidden');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        // ============================================================
+        // PANNELLO GESTORE (Visualizza, Filtra per Persona/Cantiere, Stampa per Invio, Excel, Mail Singola)
+        // ============================================================
+        function mostraPannelloGestore(daAdmin) {
+            hideAllScreens();
+            document.getElementById('mainContainer').classList.add('wide');
+            document.getElementById('screenGestore').classList.remove('hidden');
+            if (daAdmin) {
+                document.getElementById('btnTornaAdmin').classList.remove('hidden');
+            } else {
+                document.getElementById('btnTornaAdmin').classList.add('hidden');
+            }
+            popolaFiltriGestore();
+            renderTabellaGestore();
+        }
+
+        function popolaFiltriGestore() {
+            ordinaCantieriPerCodice();
+            ordinaUtentiPerCognome();
+            const selC = document.getElementById('fltCantiere');
+            const curC = selC.value;
+            selC.innerHTML = '<option value="">-- Tutti i Cantieri --</option>' + 
+                DB.cantieri.map(c => `<option value="${c.Codice}">${c.Codice} - ${c.Descrizione}</option>`).join('');
+            selC.value = curC;
+
+            const selO = document.getElementById('fltOperaio');
+            const curO = selO.value;
+            const lavoratori = pulisciUtentiSistema(DB.utenti);
+            selO.innerHTML = '<option value="">-- Tutti i Lavoratori --</option>' + 
+                lavoratori.map(u => `<option value="${u.Matricola}">${u.Cognome} ${u.Nome} (Matr. ${u.Matricola})</option>`).join('');
+            selO.value = curO;
+        }
+
+        function resetFiltriGestore() {
+            document.getElementById('fltCantiere').value = '';
+            document.getElementById('fltOperaio').value = '';
+            document.getElementById('fltStato').value = '';
+            document.getElementById('fltDataDal').value = '';
+            document.getElementById('fltDataAl').value = '';
+            renderTabellaGestore();
+        }
+
+        function rapportinoContieneCantiere(r, codCantiere) {
+            if (!codCantiere) return true;
+            if (r.cantiereCodice === codCantiere) return true;
+            if (Array.isArray(r.cantieriCoinvolti) && r.cantieriCoinvolti.includes(codCantiere)) return true;
+            if (Array.isArray(r.giornate) && r.giornate.some(g => g.cantiereCodice === codCantiere)) return true;
+            return false;
+        }
+
+        function getRapportiniFiltrati() {
+            const fCant = document.getElementById('fltCantiere').value;
+            const fOp = document.getElementById('fltOperaio').value;
+            const fStato = document.getElementById('fltStato').value;
+            const fDal = document.getElementById('fltDataDal').value;
+            const fAl = document.getElementById('fltDataAl').value;
+
+            return RAPPORTINI_CLOUD.filter(r => {
+                if (!rapportinoContieneCantiere(r, fCant)) return false;
+                if (fOp && String(r.lavoratoreMatricola) !== String(fOp)) return false;
+                if (fStato && (r.stato || 'NUOVO') !== fStato) return false;
+                if (fDal && r.dataAl < fDal) return false;
+                if (fAl && r.dataDal > fAl) return false;
+                return true;
+            });
+        }
+
+        function renderTabellaGestore() {
+            const fCant = document.getElementById('fltCantiere').value;
+            const lista = getRapportiniFiltrati();
+            let tOrd = 0, tStr = 0, tFer = 0, tCig = 0;
+
+            lista.forEach(r => {
+                (r.giornate || []).forEach(g => {
+                    const gCant = g.cantiereCodice || r.cantiereCodice;
+                    if (fCant && gCant !== fCant) return;
+                    tOrd += Number(g.ordinarie || 0);
+                    tStr += Number(g.straordinari || 0);
+                    tFer += Number(g.ferie || 0);
+                    tCig += Number(g.cig || 0);
+                });
+            });
+
+            document.getElementById('kpiCount').innerText = lista.length;
+            document.getElementById('kpiOrd').innerText = tOrd + 'h';
+            document.getElementById('kpiStr').innerText = tStr + 'h';
+            document.getElementById('kpiFer').innerText = tFer + 'h';
+            document.getElementById('kpiCig').innerText = tCig + 'h';
+
+            const tbody = document.querySelector('#tblGestoreRapportini tbody');
+            if (lista.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 20px; color: var(--text-muted);">Nessun rapportino trovato con i filtri selezionati.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = lista.map(r => {
+                const stato = r.stato || 'NUOVO';
+                const badgeStato = stato === 'ELABORATO'
+                    ? '<span class="status-pill status-elaborato">ELABORATO</span>'
+                    : '<span class="status-pill status-nuovo">DA ELABORARE</span>';
+
+                let rOrd = 0, rStr = 0, rFer = 0, rCig = 0;
+                const dettaglioHtml = (r.giornate || []).map(g => {
+                    const gCantCode = g.cantiereCodice || r.cantiereCodice;
+                    if (fCant && gCantCode !== fCant) return '';
+                    rOrd += Number(g.ordinarie || 0);
+                    rStr += Number(g.straordinari || 0);
+                    rFer += Number(g.ferie || 0);
+                    rCig += Number(g.cig || 0);
+
+                    const dIt = (g.data || '').split('-').reverse().join('/');
+                    const gCantDesc = g.cantiereDescrizione || r.cantiereDescrizione;
+                    const gLavDesc = g.lavorazioneDescrizione || r.lavorazioneDescrizione;
+                    let riga = `<b>${dIt}</b> [<span style="color:var(--primary); font-weight:600;">${gCantDesc}</span> - ${gLavDesc}]: Ord <b>${g.ordinarie}h</b>`;
+                    if (g.straordinari > 0) riga += `, Str <b>${g.straordinari}h</b>`;
+                    if (g.ferie > 0) riga += `, Fer ${g.ferie}h`;
+                    if (g.cig > 0) riga += `, CIG ${g.cig}h`;
+                    if (g.note) riga += ` <i>(${g.note})</i>`;
+                    return `<div style="margin-bottom:3px;">${riga}</div>`;
+                }).join('');
+
+                return `
+                <tr>
+                    <td style="font-size: 0.78rem;">${r.dataInvio || '-'}<br><span style="color:var(--text-muted);">da: ${r.compilatoDa || '-'}</span></td>
+                    <td><b>${r.lavoratoreNome}</b><br><span style="font-size:0.75rem; color:var(--text-muted);">Matr. ${r.lavoratoreMatricola}</span></td>
+                    <td style="font-size: 0.8rem;"><b>${r.cantiereDescrizione}</b><br><span style="font-size:0.76rem; color:var(--primary);">${r.lavorazioneDescrizione}</span></td>
+                    <td style="font-size: 0.8rem;">${dettaglioHtml}</td>
+                    <td style="font-size: 0.8rem; white-space: nowrap;">
+                        Ord: <b>${rOrd}h</b><br>
+                        Str: <b>${rStr}h</b><br>
+                        ${rFer > 0 ? `Fer: <b>${rFer}h</b><br>` : ''}
+                        ${rCig > 0 ? `CIG: <b>${rCig}h</b>` : ''}
+                    </td>
+                    <td>${badgeStato}</td>
+                    <td class="no-print">
+                        <div class="action-btns">
+                            <button class="btn btn-info btn-sm" title="Stampa solo questo singolo invio" onclick="stampaSingoloInvio('${r.id}')">🖨️</button>
+                            <button class="btn btn-warning btn-sm" title="Invia questo singolo rapportino via email" onclick="inviaSingoloRapportinoEmail('${r.id}')">✉️ Mail</button>
+                            <button class="btn ${stato === 'ELABORATO' ? 'btn-secondary' : 'btn-success'} btn-sm" onclick="cambiaStatoRapportino('${r.id}', '${stato === 'ELABORATO' ? 'NUOVO' : 'ELABORATO'}')">
+                                ${stato === 'ELABORATO' ? 'Riapri' : '✓ Elab.'}
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="eliminaRapportinoCloud('${r.id}')">Elimina</button>
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        function cambiaStatoRapportino(id, nuovoStato) {
+            if (firebaseAttivo && rapRef && !String(id).startsWith('local_')) {
+                rapRef.child(id).update({ stato: nuovoStato });
+            } else {
+                const item = RAPPORTINI_CLOUD.find(r => r.id === id);
+                if (item) item.stato = nuovoStato;
+                renderTabellaGestore();
+            }
+        }
+
+        function eliminaRapportinoCloud(id) {
+            if (!confirm("Confermi l'eliminazione definitiva di questo rapportino?")) return;
+            if (firebaseAttivo && rapRef && !String(id).startsWith('local_')) {
+                rapRef.child(id).remove();
+            } else {
+                RAPPORTINI_CLOUD = RAPPORTINI_CLOUD.filter(r => r.id !== id);
+                renderTabellaGestore();
+            }
+        }
+
+        function buildHtmlSchedaStampa(r, idx, total, pageBreak, fCant = '') {
+            const dd = (r.dataDal || '').split('-').reverse().join('/');
+            const da = (r.dataAl || '').split('-').reverse().join('/');
+            let sOrd = 0, sStr = 0, sFer = 0, sCig = 0;
+
+            const rowsHtml = (r.giornate || []).map(g => {
+                const gCantCode = g.cantiereCodice || r.cantiereCodice;
+                if (fCant && gCantCode !== fCant) return '';
+                sOrd += Number(g.ordinarie || 0);
+                sStr += Number(g.straordinari || 0);
+                sFer += Number(g.ferie || 0);
+                sCig += Number(g.cig || 0);
+
+                const dIt = (g.data || '').split('-').reverse().join('/');
+                const gCantDesc = g.cantiereDescrizione || r.cantiereDescrizione;
+                const gLavDesc = g.lavorazioneDescrizione || r.lavorazioneDescrizione;
+                return `
+                <tr>
+                    <td style="white-space:nowrap;">${dIt}</td>
+                    <td>${gCantDesc}</td>
+                    <td>${gLavDesc}</td>
+                    <td style="text-align:center;"><b>${g.ordinarie}h</b></td>
+                    <td style="text-align:center;">${g.straordinari}h</td>
+                    <td style="text-align:center;">${g.ferie}h</td>
+                    <td style="text-align:center;">${g.cig}h</td>
+                    <td>${g.note || ''}</td>
+                </tr>`;
+            }).join('');
+
+            const isLast = (idx === total - 1);
+            const breakClass = (pageBreak && !isLast) ? ' page-break' : '';
+
+            return `
+            <div class="print-rap-sheet${breakClass}">
+                <div class="print-rap-header">
+                    <div class="print-rap-title">EDILE COSTRUZIONI — SCHEDA RAPPORTINO ORE (Invio #${idx + 1} di ${total})</div>
+                    <div style="font-size:0.8rem; color:#475569;">Trasmesso il: <b>${r.dataInvio || '-'}</b></div>
+                </div>
+                <div class="print-rap-meta">
+                    <strong>Lavoratore:</strong> ${r.lavoratoreNome} (Matricola: ${r.lavoratoreMatricola}) &nbsp;|&nbsp;
+                    <strong>Periodo:</strong> dal ${dd} al ${da}<br>
+                    <strong>Compilato da:</strong> ${r.compilatoDa || '-'} &nbsp;|&nbsp;
+                    <strong>Stato:</strong> ${r.stato || 'NUOVO'}
+                </div>
+                <table class="print-rap-table">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Cantiere</th>
+                            <th>Lavorazione</th>
+                            <th style="text-align:center;">Ord.</th>
+                            <th style="text-align:center;">Str.</th>
+                            <th style="text-align:center;">Fer/Perm</th>
+                            <th style="text-align:center;">CIG</th>
+                            <th>Note</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rowsHtml}</tbody>
+                </table>
+                <div class="print-rap-totals">
+                    TOTALE INVIO: Ordinarie ${sOrd}h &nbsp;|&nbsp; Straordinari ${sStr}h &nbsp;|&nbsp; Ferie/Permessi ${sFer}h &nbsp;|&nbsp; CIG ${sCig}h
+                </div>
+            </div>`;
+        }
+
+        function stampaRapportiniGestore(pageBreakPerInvio = true) {
+            const lista = getRapportiniFiltrati();
+            if (lista.length === 0) return alert("Nessun rapportino da stampare con i filtri attuali.");
+            const fCant = document.getElementById('fltCantiere').value;
+
+            const container = document.getElementById('printSheetsContainer');
+            container.innerHTML = lista.map((r, idx) => buildHtmlSchedaStampa(r, idx, lista.length, pageBreakPerInvio, fCant)).join('');
+            window.print();
+        }
+
+        function stampaSingoloInvio(id) {
+            const r = RAPPORTINI_CLOUD.find(item => item.id === id);
+            if (!r) return alert("Rapportino non trovato.");
+            const container = document.getElementById('printSheetsContainer');
+            container.innerHTML = buildHtmlSchedaStampa(r, 0, 1, false, '');
+            window.print();
+        }
+
+        function esportaExcelGestore() {
+            const lista = getRapportiniFiltrati();
+            if (lista.length === 0) return alert("Nessun rapportino da esportare.");
+            const fCant = document.getElementById('fltCantiere').value;
+
+            const righeExcel = [];
+            lista.forEach((r, invioIdx) => {
+                (r.giornate || []).forEach(g => {
+                    const gCantCode = g.cantiereCodice || r.cantiereCodice;
+                    if (fCant && gCantCode !== fCant) return;
+                    const gCantDesc = g.cantiereDescrizione || r.cantiereDescrizione;
+                    const gLavCode = g.lavorazioneCodice || r.lavorazioneCodice;
+                    const gLavDesc = g.lavorazioneDescrizione || r.lavorazioneDescrizione;
+
+                    righeExcel.push({
+                        "ID Invio": invioIdx + 1,
+                        "Data Invio": r.dataInvio || '',
+                        "Matricola": r.lavoratoreMatricola,
+                        "Lavoratore": r.lavoratoreNome,
+                        "Data Lavoro": (g.data || '').split('-').reverse().join('/'),
+                        "Codice Cantiere": gCantCode,
+                        "Cantiere": gCantDesc,
+                        "Codice Lavorazione": gLavCode,
+                        "Lavorazione": gLavDesc,
+                        "Ore Ordinarie": Number(g.ordinarie || 0),
+                        "Ore Straordinarie": Number(g.straordinari || 0),
+                        "Ferie / Permessi": Number(g.ferie || 0),
+                        "CIG": Number(g.cig || 0),
+                        "Note": g.note || '',
+                        "Stato": r.stato || 'NUOVO',
+                        "Compilato Da": r.compilatoDa || ''
+                    });
+                });
+            });
+
+            const ws = XLSX.utils.json_to_sheet(righeExcel);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Rapportini_Ore");
+            const oggi = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(wb, `Rapportini_Edile_Costruzioni_${oggi}.xlsx`);
+        }
+
+        function inviaSingoloRapportinoEmail(id) {
+            const r = RAPPORTINI_CLOUD.find(item => item.id === id);
+            if (!r) return alert("Rapportino non trovato.");
+
+            let emailDest = localStorage.getItem('edile_gestore_email') || 'rapportino-ore@edilecostruzioni.com';
+            const inputEmail = prompt("Indirizzo email destinatario per questo singolo rapportino:", emailDest);
+            if (!inputEmail) return;
+            localStorage.setItem('edile_gestore_email', inputEmail.trim());
+
+            const dd = (r.dataDal || '').split('-').reverse().join('/');
+            const da = (r.dataAl || '').split('-').reverse().join('/');
+
+            let corpo = `RAPPORTINO ORE - EDILE COSTRUZIONI
+` +
+                        `=============================================
+` +
+                        `Lavoratore: ${r.lavoratoreNome} (Matr. ${r.lavoratoreMatricola})
+` +
+                        `Periodo: dal ${dd} al ${da}
+` +
+                        `Compilato da: ${r.compilatoDa || '-'}
+` +
+                        `Data/Ora Invio: ${r.dataInvio || '-'}
+
+` +
+                        `DETTAGLIO GIORNALIERO E CANTIERI:
+`;
+
+            (r.giornate || []).forEach(g => {
+                const dIt = (g.data || '').split('-').reverse().join('/');
+                const gCantDesc = g.cantiereDescrizione || r.cantiereDescrizione;
+                const gLavDesc = g.lavorazioneDescrizione || r.lavorazioneDescrizione;
+                corpo += `- [${dIt}] ${gCantDesc} (${gLavDesc}) -> Ord: ${g.ordinarie}h | Str: ${g.straordinari}h`;
+                if (g.ferie > 0) corpo += ` | Ferie/Perm: ${g.ferie}h`;
+                if (g.cig > 0) corpo += ` | CIG: ${g.cig}h`;
+                corpo += `
+`;
+                if (g.note) corpo += `  Note: ${g.note}
+`;
+            });
+
+            corpo += `
+RIEPILOGO TOTALI:
+` +
+                     `- Ore Ordinarie: ${r.totaleOrdinarie}h
+` +
+                     `- Ore Straordinari: ${r.totaleStraordinari}h
+` +
+                     `- Ferie / Permessi: ${r.totaleFerie}h
+` +
+                     `- CIG: ${r.totaleCig}h
+` +
+                     `=============================================`;
+
+            const subject = `Rapportino ${r.lavoratoreNome} (${dd} - ${da})`;
+            window.location.href = `mailto:${encodeURIComponent(inputEmail.trim())}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(corpo)}`;
+        }
+    </script>
+</body>
+</html>
