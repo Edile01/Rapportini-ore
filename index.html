@@ -130,8 +130,9 @@
             .print-only-container { display: block !important; }
             .print-rap-sheet { border: 1.5px solid #1f4e79; border-radius: 8px; padding: 14px; margin-bottom: 18px; page-break-inside: avoid; break-inside: avoid; }
             .print-rap-sheet.page-break { page-break-after: always; break-after: page; }
-            .print-rap-header { display: flex; justify-content: space-between; border-bottom: 2px solid #1f4e79; padding-bottom: 8px; margin-bottom: 10px; }
+            .print-rap-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; border-bottom: 2px solid #1f4e79; padding-bottom: 8px; margin-bottom: 10px; }
             .print-rap-title { font-size: 1.05rem; font-weight: 800; color: #102a45; }
+            .print-rap-user-big { font-size: 1.35rem; font-weight: 900; color: #102a45; text-align: right; line-height: 1.15; letter-spacing: 0.3px; }
             .print-rap-meta { font-size: 0.85rem; margin-bottom: 10px; line-height: 1.5; background: #f8fafc; padding: 8px; border-radius: 6px; border: 1px solid #cbd5e1; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .print-rap-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-bottom: 8px; }
             .print-rap-table th, .print-rap-table td { border: 1px solid #94a3b8; padding: 6px 8px; text-align: left; }
@@ -409,22 +410,65 @@
                 <button class="btn btn-secondary" onclick="stampaRapportiniGestore(false)">🖨️ Stampa Elenco Continuo</button>
             </div>
 
-            <!-- TABELLA RAPPORTINI -->
-            <div class="table-container" id="gestoreScreenTableWrap">
-                <table id="tblGestoreRapportini">
-                    <thead>
-                        <tr>
-                            <th>Invio</th>
-                            <th>Lavoratore</th>
-                            <th>Cantieri / Lavorazioni</th>
-                            <th>Dettaglio Giornate e Ore</th>
-                            <th>Totali</th>
-                            <th>Stato</th>
-                            <th class="no-print" style="width: 215px;">Azioni</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
+            <!-- TABELLE RAPPORTINI RAGGRUPPATE A TENDINA -->
+            <div id="gestoreScreenTableWrap">
+                <!-- PACCHETTO 1: DA ELABORARE -->
+                <div class="rel-cant-group" style="margin-bottom: 14px; border-color: #f59e0b;">
+                    <div class="rel-cant-header" style="background: #fffbeb;" onclick="togglePacchettoGestore('NUOVO')">
+                        <div class="rel-cant-title" style="color: #92400e;">
+                            <span id="arrowPkgNuovo" style="font-size:0.85rem; width:14px; display:inline-block;">▼</span>
+                            <span>📥 Rapportini DA ELABORARE</span>
+                        </div>
+                        <span class="rel-cant-count" id="countPkgNuovo" style="background: #d97706;">0</span>
+                    </div>
+                    <div class="rel-cant-body" id="bodyPkgNuovo">
+                        <div class="table-container" style="margin:0;">
+                            <table id="tblGestoreNuovi">
+                                <thead>
+                                    <tr>
+                                        <th>Invio</th>
+                                        <th>Lavoratore</th>
+                                        <th>Cantieri / Lavorazioni</th>
+                                        <th>Dettaglio Giornate e Ore</th>
+                                        <th>Totali</th>
+                                        <th>Stato</th>
+                                        <th class="no-print" style="width: 215px;">Azioni</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PACCHETTO 2: ELABORATI -->
+                <div class="rel-cant-group" style="margin-bottom: 14px; border-color: #22c55e;">
+                    <div class="rel-cant-header" style="background: #f0fdf4;" onclick="togglePacchettoGestore('ELABORATO')">
+                        <div class="rel-cant-title" style="color: #166534;">
+                            <span id="arrowPkgElaborato" style="font-size:0.85rem; width:14px; display:inline-block;">▶</span>
+                            <span>✅ Rapportini ELABORATI</span>
+                        </div>
+                        <span class="rel-cant-count" id="countPkgElaborato" style="background: #16a34a;">0</span>
+                    </div>
+                    <div class="rel-cant-body hidden" id="bodyPkgElaborato">
+                        <div class="table-container" style="margin:0;">
+                            <table id="tblGestoreElaborati">
+                                <thead>
+                                    <tr>
+                                        <th>Invio</th>
+                                        <th>Lavoratore</th>
+                                        <th>Cantieri / Lavorazioni</th>
+                                        <th>Dettaglio Giornate e Ore</th>
+                                        <th>Totali</th>
+                                        <th>Stato</th>
+                                        <th class="no-print" style="width: 215px;">Azioni</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- CONTENITORE STAMPA SUDDIVISA PER SINGOLO INVIO -->
@@ -1640,8 +1684,83 @@
             });
         }
 
+        let gestorePkgOpen = { NUOVO: true, ELABORATO: false };
+
+        function togglePacchettoGestore(tipo) {
+            gestorePkgOpen[tipo] = !gestorePkgOpen[tipo];
+            aggiornaVisibilitaPacchettiGestore();
+        }
+
+        function aggiornaVisibilitaPacchettiGestore() {
+            const bodyN = document.getElementById('bodyPkgNuovo');
+            const arrowN = document.getElementById('arrowPkgNuovo');
+            if (bodyN && arrowN) {
+                bodyN.classList.toggle('hidden', !gestorePkgOpen.NUOVO);
+                arrowN.innerText = gestorePkgOpen.NUOVO ? '▼' : '▶';
+            }
+            const bodyE = document.getElementById('bodyPkgElaborato');
+            const arrowE = document.getElementById('arrowPkgElaborato');
+            if (bodyE && arrowE) {
+                bodyE.classList.toggle('hidden', !gestorePkgOpen.ELABORATO);
+                arrowE.innerText = gestorePkgOpen.ELABORATO ? '▼' : '▶';
+            }
+        }
+
+        function buildRigaRapportinoGestoreHtml(r, fCant) {
+            const stato = r.stato || 'NUOVO';
+            const badgeStato = stato === 'ELABORATO'
+                ? '<span class="status-pill status-elaborato">ELABORATO</span>'
+                : '<span class="status-pill status-nuovo">DA ELABORARE</span>';
+
+            let rOrd = 0, rStr = 0, rFer = 0, rCig = 0;
+            const dettaglioHtml = (r.giornate || []).map(g => {
+                const gCantCode = g.cantiereCodice || r.cantiereCodice;
+                if (fCant && gCantCode !== fCant) return '';
+                rOrd += Number(g.ordinarie || 0);
+                rStr += Number(g.straordinari || 0);
+                rFer += Number(g.ferie || 0);
+                rCig += Number(g.cig || 0);
+
+                const dIt = (g.data || '').split('-').reverse().join('/');
+                const gCantDesc = g.cantiereDescrizione || r.cantiereDescrizione;
+                const gLavDesc = g.lavorazioneDescrizione || r.lavorazioneDescrizione;
+                let riga = `<b>${dIt}</b> [<span style="color:var(--primary); font-weight:600;">${gCantDesc}</span> - ${gLavDesc}]: Ord <b>${g.ordinarie}h</b>`;
+                if (g.straordinari > 0) riga += `, Str <b>${g.straordinari}h</b>`;
+                if (g.ferie > 0) riga += `, Fer ${g.ferie}h`;
+                if (g.cig > 0) riga += `, CIG ${g.cig}h`;
+                if (g.note) riga += ` <i>(${g.note})</i>`;
+                return `<div style="margin-bottom:3px;">${riga}</div>`;
+            }).join('');
+
+            return `
+            <tr>
+                <td style="font-size: 0.78rem;">${r.dataInvio || '-'}<br><span style="color:var(--text-muted);">da: ${r.compilatoDa || '-'}</span></td>
+                <td><b>${r.lavoratoreNome}</b><br><span style="font-size:0.75rem; color:var(--text-muted);">Matr. ${r.lavoratoreMatricola}</span></td>
+                <td style="font-size: 0.8rem;"><b>${r.cantiereDescrizione}</b><br><span style="font-size:0.76rem; color:var(--primary);">${r.lavorazioneDescrizione}</span></td>
+                <td style="font-size: 0.8rem;">${dettaglioHtml}</td>
+                <td style="font-size: 0.8rem; white-space: nowrap;">
+                    Ord: <b>${rOrd}h</b><br>
+                    Str: <b>${rStr}h</b><br>
+                    ${rFer > 0 ? `Fer: <b>${rFer}h</b><br>` : ''}
+                    ${rCig > 0 ? `CIG: <b>${rCig}h</b>` : ''}
+                </td>
+                <td>${badgeStato}</td>
+                <td class="no-print">
+                    <div class="action-btns">
+                        <button class="btn btn-info btn-sm" title="Stampa solo questo singolo invio" onclick="stampaSingoloInvio('${r.id}')">🖨️</button>
+                        <button class="btn btn-warning btn-sm" title="Invia questo singolo rapportino via email" onclick="inviaSingoloRapportinoEmail('${r.id}')">✉️ Mail</button>
+                        <button class="btn ${stato === 'ELABORATO' ? 'btn-secondary' : 'btn-success'} btn-sm" onclick="cambiaStatoRapportino('${r.id}', '${stato === 'ELABORATO' ? 'NUOVO' : 'ELABORATO'}')">
+                            ${stato === 'ELABORATO' ? 'Riapri' : '✓ Elab.'}
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="eliminaRapportinoCloud('${r.id}')">Elimina</button>
+                    </div>
+                </td>
+            </tr>`;
+        }
+
         function renderTabellaGestore() {
             const fCant = document.getElementById('fltCantiere').value;
+            const fStato = document.getElementById('fltStato').value;
             const lista = getRapportiniFiltrati();
             let tOrd = 0, tStr = 0, tFer = 0, tCig = 0;
 
@@ -1662,63 +1781,33 @@
             document.getElementById('kpiFer').innerText = tFer + 'h';
             document.getElementById('kpiCig').innerText = tCig + 'h';
 
-            const tbody = document.querySelector('#tblGestoreRapportini tbody');
-            if (lista.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 20px; color: var(--text-muted);">Nessun rapportino trovato con i filtri selezionati.</td></tr>';
-                return;
+            const nuovi = lista.filter(r => (r.stato || 'NUOVO') !== 'ELABORATO');
+            const elaborati = lista.filter(r => (r.stato || 'NUOVO') === 'ELABORATO');
+
+            document.getElementById('countPkgNuovo').innerText = `${nuovi.length} rapportin${nuovi.length === 1 ? 'o' : 'i'}`;
+            document.getElementById('countPkgElaborato').innerText = `${elaborati.length} rapportin${elaborati.length === 1 ? 'o' : 'i'}`;
+
+            // Se l'utente filtra esplicitamente per ELABORATO, apriamo automaticamente il pacchetto elaborati
+            if (fStato === 'ELABORATO') {
+                gestorePkgOpen.ELABORATO = true;
+            } else if (fStato === 'NUOVO') {
+                gestorePkgOpen.NUOVO = true;
+            }
+            aggiornaVisibilitaPacchettiGestore();
+
+            const tbodyNuovi = document.querySelector('#tblGestoreNuovi tbody');
+            if (nuovi.length === 0) {
+                tbodyNuovi.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 16px; color: var(--text-muted);">Nessun rapportino da elaborare con i filtri selezionati.</td></tr>';
+            } else {
+                tbodyNuovi.innerHTML = nuovi.map(r => buildRigaRapportinoGestoreHtml(r, fCant)).join('');
             }
 
-            tbody.innerHTML = lista.map(r => {
-                const stato = r.stato || 'NUOVO';
-                const badgeStato = stato === 'ELABORATO'
-                    ? '<span class="status-pill status-elaborato">ELABORATO</span>'
-                    : '<span class="status-pill status-nuovo">DA ELABORARE</span>';
-
-                let rOrd = 0, rStr = 0, rFer = 0, rCig = 0;
-                const dettaglioHtml = (r.giornate || []).map(g => {
-                    const gCantCode = g.cantiereCodice || r.cantiereCodice;
-                    if (fCant && gCantCode !== fCant) return '';
-                    rOrd += Number(g.ordinarie || 0);
-                    rStr += Number(g.straordinari || 0);
-                    rFer += Number(g.ferie || 0);
-                    rCig += Number(g.cig || 0);
-
-                    const dIt = (g.data || '').split('-').reverse().join('/');
-                    const gCantDesc = g.cantiereDescrizione || r.cantiereDescrizione;
-                    const gLavDesc = g.lavorazioneDescrizione || r.lavorazioneDescrizione;
-                    let riga = `<b>${dIt}</b> [<span style="color:var(--primary); font-weight:600;">${gCantDesc}</span> - ${gLavDesc}]: Ord <b>${g.ordinarie}h</b>`;
-                    if (g.straordinari > 0) riga += `, Str <b>${g.straordinari}h</b>`;
-                    if (g.ferie > 0) riga += `, Fer ${g.ferie}h`;
-                    if (g.cig > 0) riga += `, CIG ${g.cig}h`;
-                    if (g.note) riga += ` <i>(${g.note})</i>`;
-                    return `<div style="margin-bottom:3px;">${riga}</div>`;
-                }).join('');
-
-                return `
-                <tr>
-                    <td style="font-size: 0.78rem;">${r.dataInvio || '-'}<br><span style="color:var(--text-muted);">da: ${r.compilatoDa || '-'}</span></td>
-                    <td><b>${r.lavoratoreNome}</b><br><span style="font-size:0.75rem; color:var(--text-muted);">Matr. ${r.lavoratoreMatricola}</span></td>
-                    <td style="font-size: 0.8rem;"><b>${r.cantiereDescrizione}</b><br><span style="font-size:0.76rem; color:var(--primary);">${r.lavorazioneDescrizione}</span></td>
-                    <td style="font-size: 0.8rem;">${dettaglioHtml}</td>
-                    <td style="font-size: 0.8rem; white-space: nowrap;">
-                        Ord: <b>${rOrd}h</b><br>
-                        Str: <b>${rStr}h</b><br>
-                        ${rFer > 0 ? `Fer: <b>${rFer}h</b><br>` : ''}
-                        ${rCig > 0 ? `CIG: <b>${rCig}h</b>` : ''}
-                    </td>
-                    <td>${badgeStato}</td>
-                    <td class="no-print">
-                        <div class="action-btns">
-                            <button class="btn btn-info btn-sm" title="Stampa solo questo singolo invio" onclick="stampaSingoloInvio('${r.id}')">🖨️</button>
-                            <button class="btn btn-warning btn-sm" title="Invia questo singolo rapportino via email" onclick="inviaSingoloRapportinoEmail('${r.id}')">✉️ Mail</button>
-                            <button class="btn ${stato === 'ELABORATO' ? 'btn-secondary' : 'btn-success'} btn-sm" onclick="cambiaStatoRapportino('${r.id}', '${stato === 'ELABORATO' ? 'NUOVO' : 'ELABORATO'}')">
-                                ${stato === 'ELABORATO' ? 'Riapri' : '✓ Elab.'}
-                            </button>
-                            <button class="btn btn-danger btn-sm" onclick="eliminaRapportinoCloud('${r.id}')">Elimina</button>
-                        </div>
-                    </td>
-                </tr>`;
-            }).join('');
+            const tbodyElab = document.querySelector('#tblGestoreElaborati tbody');
+            if (elaborati.length === 0) {
+                tbodyElab.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 16px; color: var(--text-muted);">Nessun rapportino elaborato con i filtri selezionati.</td></tr>';
+            } else {
+                tbodyElab.innerHTML = elaborati.map(r => buildRigaRapportinoGestoreHtml(r, fCant)).join('');
+            }
         }
 
         function cambiaStatoRapportino(id, nuovoStato) {
@@ -1776,8 +1865,11 @@
             return `
             <div class="print-rap-sheet${breakClass}">
                 <div class="print-rap-header">
-                    <div class="print-rap-title">EDILE COSTRUZIONI — SCHEDA RAPPORTINO ORE (Invio #${idx + 1} di ${total})</div>
-                    <div style="font-size:0.8rem; color:#475569;">Trasmesso il: <b>${r.dataInvio || '-'}</b></div>
+                    <div>
+                        <div class="print-rap-title">EDILE COSTRUZIONI — SCHEDA RAPPORTINO ORE (Invio #${idx + 1} di ${total})</div>
+                        <div style="font-size:0.8rem; color:#475569; margin-top:3px;">Trasmesso il: <b>${r.dataInvio || '-'}</b></div>
+                    </div>
+                    <div class="print-rap-user-big">${r.lavoratoreMatricola ? r.lavoratoreMatricola + ' - ' : ''}${r.lavoratoreNome || ''}</div>
                 </div>
                 <div class="print-rap-meta">
                     <strong>Lavoratore:</strong> ${r.lavoratoreNome} (Matricola: ${r.lavoratoreMatricola}) &nbsp;|&nbsp;
