@@ -120,6 +120,11 @@
         .rel-cant-body th, .rel-cant-body td { border-left: none; border-right: none; }
         .rel-cant-body tr:last-child td { border-bottom: none; }
 
+        .ore-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        @media (max-width: 480px) {
+            .ore-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
         .print-only-container { display: none; }
 
         @media print {
@@ -130,6 +135,12 @@
             .print-only-container { display: block !important; }
             .print-rap-sheet { border: 1.5px solid #1f4e79; border-radius: 8px; padding: 14px; margin-bottom: 18px; page-break-inside: avoid; break-inside: avoid; }
             .print-rap-sheet.page-break { page-break-after: always; break-after: page; }
+            .print-sheet-top { margin-bottom: 10px; }
+            .print-sheet-period { font-size: 0.95rem; font-weight: 700; color: #1f4e79; margin-top: 2px; }
+            .print-kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 12px; }
+            .print-kpi-box { background: #f8fafc !important; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px 4px; text-align: center; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .print-kpi-val { font-size: 1.15rem; font-weight: 800; color: #1f4e79; }
+            .print-kpi-lbl { font-size: 0.66rem; font-weight: 700; color: #475569; text-transform: uppercase; margin-top: 2px; }
             .print-rap-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; border-bottom: 2px solid #1f4e79; padding-bottom: 8px; margin-bottom: 10px; }
             .print-rap-title { font-size: 1.05rem; font-weight: 800; color: #102a45; }
             .print-rap-user-big { font-size: 1.35rem; font-weight: 900; color: #102a45; text-align: right; line-height: 1.15; letter-spacing: 0.3px; }
@@ -137,7 +148,12 @@
             .print-rap-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-bottom: 8px; }
             .print-rap-table th, .print-rap-table td { border: 1px solid #94a3b8; padding: 6px 8px; text-align: left; }
             .print-rap-table th { background: #e2e8f0 !important; color: #102a45; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            .print-rap-totals { font-size: 0.88rem; font-weight: 700; text-align: right; color: #102a45; padding-top: 4px; }
+            .print-rap-totals { font-size: 0.85rem; font-weight: 700; text-align: right; color: #102a45; padding-top: 4px; }
+            .print-rap-notes { margin-top: 10px; border-top: 1px dashed #94a3b8; padding-top: 8px; font-size: 0.82rem; }
+            .print-rap-notes-title { font-weight: 800; color: #102a45; margin-bottom: 4px; text-transform: uppercase; font-size: 0.76rem; }
+            .print-rap-note-item { display: flex; gap: 10px; margin-bottom: 3px; line-height: 1.35; }
+            .print-rap-note-date { font-weight: 700; color: #1f4e79; white-space: nowrap; min-width: 92px; }
+            .print-meteo-sub { font-size: 0.7rem; color: #475569; font-weight: 400; margin-top: 2px; line-height: 1.2; white-space: normal; }
         }
     </style>
 </head>
@@ -195,13 +211,17 @@
                     <div><label>Codice Cantiere</label><input type="text" id="admCantCod" placeholder="Es. 510"></div>
                     <div><label>Descrizione / Nome</label><input type="text" id="admCantDesc" placeholder="Es. Nuovo Cantiere (Rimini)"></div>
                 </div>
+                <div class="row">
+                    <div><label>Città (Luogo geografico)</label><input type="text" id="admCantCitta" placeholder="Es. Rimini"></div>
+                    <div style="max-width: 180px;"><label>Provincia (sigla)</label><input type="text" id="admCantProv" placeholder="Es. RN" maxlength="2" style="text-transform: uppercase;"></div>
+                </div>
                 <div style="display: flex; gap: 8px;">
                     <button class="btn btn-success btn-sm" id="btnSalvaCantiere" onclick="adminSalvaCantiere()">+ Aggiungi Cantiere</button>
                     <button class="btn btn-secondary btn-sm hidden" id="btnAnnullaCantiere" onclick="adminAnnullaModificaCantiere()">Annulla</button>
                 </div>
                 <div class="table-container">
                     <table id="admTblCantieri">
-                        <thead><tr><th>Codice</th><th>Descrizione</th><th style="width: 130px;">Azioni</th></tr></thead>
+                        <thead><tr><th>Codice</th><th>Descrizione</th><th>Luogo (Città, Prov.)</th><th style="width: 130px;">Azioni</th></tr></thead>
                         <tbody></tbody>
                     </table>
                 </div>
@@ -353,9 +373,9 @@
 
         <!-- 5. PANNELLO GESTORE (Solo Rapportini Ricevuti) -->
         <div id="screenGestore" class="card hidden">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
+            <div class="no-print" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
                 <div>
-                    <h2 style="margin-bottom: 2px;">Gestione Rapportini Ricevuti</h2>
+                    <h2 style="margin-bottom: 2px;">Gestione Rapportini Ricevuti <span id="appVersionBadge" style="font-size: 0.78rem; font-weight: 700; color: var(--primary); background: #e0f2fe; padding: 2px 8px; border-radius: 10px; vertical-align: middle; margin-left: 4px;">v4.0</span></h2>
                     <span style="font-size: 0.8rem; color: var(--text-muted);" id="gestoreSubtitle">Elenco rapportini trasmessi dal cantiere su Cloud</span>
                 </div>
                 <button id="btnTornaAdmin" class="btn btn-secondary btn-sm no-print hidden" onclick="mostraPannelloAdmin()">← Torna a Pannello Admin</button>
@@ -394,13 +414,15 @@
                 </div>
             </div>
 
-            <!-- RIEPILOGO ORE -->
-            <div class="kpi-grid">
+            <!-- RIEPILOGO ORE (solo visualizzazione a schermo) -->
+            <div class="kpi-grid no-print">
                 <div class="kpi-box"><div class="kpi-val" id="kpiCount">0</div><div class="kpi-lbl">Rapportini</div></div>
                 <div class="kpi-box"><div class="kpi-val" id="kpiOrd">0</div><div class="kpi-lbl">Ore Ordinarie</div></div>
-                <div class="kpi-box"><div class="kpi-val" id="kpiStr">0</div><div class="kpi-lbl">Straordinari</div></div>
-                <div class="kpi-box"><div class="kpi-val" id="kpiFer">0</div><div class="kpi-lbl">Ferie / Perm.</div></div>
+                <div class="kpi-box"><div class="kpi-val" id="kpiStr">0</div><div class="kpi-lbl">Straordinarie</div></div>
+                <div class="kpi-box"><div class="kpi-val" id="kpiFer">0</div><div class="kpi-lbl">Ferie</div></div>
+                <div class="kpi-box"><div class="kpi-val" id="kpiPer">0</div><div class="kpi-lbl">Permessi</div></div>
                 <div class="kpi-box"><div class="kpi-val" id="kpiCig">0</div><div class="kpi-lbl">CIG</div></div>
+                <div class="kpi-box"><div class="kpi-val" id="kpiMal">0</div><div class="kpi-lbl">Malattia</div></div>
             </div>
 
             <!-- AZIONI ESPORTAZIONE / STAMPA -->
@@ -409,6 +431,7 @@
                 <button class="btn btn-info" onclick="stampaRapportiniGestore(true)">🖨️ Stampa Schede per Invio (Pagina Separata)</button>
                 <button class="btn btn-secondary" onclick="stampaRapportiniGestore(false)">🖨️ Stampa Elenco Continuo</button>
             </div>
+            <div id="printLoadingAlert" class="alert alert-info no-print hidden">⏳ Recupero condizioni atmosferiche dei cantieri per la stampa...</div>
 
             <!-- TABELLE RAPPORTINI RAGGRUPPATE A TENDINA -->
             <div id="gestoreScreenTableWrap">
@@ -478,6 +501,8 @@
     </div>
 
     <script>
+        const APP_VERSION = "v4.0";
+
         // Configurazione Firebase integrata
         const firebaseConfig = {
             apiKey: "AIzaSyABC8RaY9FYWdU6IIBRioTL9L0z03XmLCo",
@@ -490,7 +515,7 @@
         };
 
         // Database anagrafiche importato dai fogli Excel (senza Amministratore e Gestore nell'elenco utenti)
-        const DB_FACTORY = {"utenti": [{"Matricola": "144", "Username": "besal", "Password": "bes144", "Nome": "Besnik", "Cognome": "Alhysa", "Ruolo": "OPERAIO"}, {"Matricola": "90", "Username": "benav", "Password": "ben90", "Nome": "Benito", "Cognome": "Avarello", "Ruolo": "OPERAIO"}, {"Matricola": "83", "Username": "albas", "Password": "alb83", "Nome": "Alberto", "Cognome": "Bastoni", "Ruolo": "CAPOCANTIERE,OPERAIO"}, {"Matricola": "40", "Username": "agobu", "Password": "buc40", "Nome": "Agostino", "Cognome": "Bucca", "Ruolo": "CAPOCANTIERE,OPERAIO"}, {"Matricola": "88", "Username": "amci", "Password": "amb88", "Nome": "Ambrogio", "Cognome": "Cito", "Ruolo": "CAPOCANTIERE,OPERAIO"}, {"Matricola": "143", "Username": "tauco", "Password": "tau143", "Nome": "Taulant", "Cognome": "Cohodari", "Ruolo": "OPERAIO"}, {"Matricola": "123", "Username": "aliefa", "Password": "ali123", "Nome": "Alieu", "Cognome": "Faye", "Ruolo": "OPERAIO"}, {"Matricola": "142", "Username": "sabis", "Password": "sab142", "Nome": "Sabedin", "Cognome": "Isenovski", "Ruolo": "OPERAIO"}, {"Matricola": "141", "Username": "fatka", "Password": "fat141", "Nome": "Fatmir", "Cognome": "Karaj", "Ruolo": "OPERAIO"}, {"Matricola": "102", "Username": "nicmo", "Password": "nic102", "Nome": "Nicolo'", "Cognome": "Morreale", "Ruolo": "OPERAIO"}, {"Matricola": "23", "Username": "pasmo", "Password": "pas23", "Nome": "Pasqualino", "Cognome": "Morreale", "Ruolo": "OPERAIO"}, {"Matricola": "28", "Username": "mapre", "Password": "mas28", "Nome": "Massimo", "Cognome": "Pretelli", "Ruolo": "CAPOCANTIERE,OPERAIO"}, {"Matricola": "126", "Username": "adrad", "Password": "adz126", "Nome": "Adzi", "Cognome": "Radovesi", "Ruolo": "OPERAIO"}, {"Matricola": "32", "Username": "filro", "Password": "fil32", "Nome": "Filippo", "Cognome": "Rosa", "Ruolo": "OPERAIO"}, {"Matricola": "93", "Username": "lase", "Password": "lua93", "Nome": "Luan", "Cognome": "Selimi", "Ruolo": "OPERAIO"}, {"Matricola": "113", "Username": "giost", "Password": "gio113", "Nome": "Giovanni", "Cognome": "Stasi", "Ruolo": "CAPOCANTIERE,OPERAIO"}, {"Matricola": "87", "Username": "giaur", "Password": "gia87", "Nome": "Gianfranco", "Cognome": "Urbinati", "Ruolo": "OPERAIO"}, {"Matricola": "106", "Username": "chuye", "Password": "chu106", "Nome": "Chukwuma", "Cognome": "Yekini", "Ruolo": "OPERAIO"}, {"Matricola": "954", "Username": "fedto", "Password": "fed954", "Nome": "Federico", "Cognome": "Togni", "Ruolo": "CAPOCANTIERE,OPERAIO"}, {"Matricola": "963", "Username": "sebca", "Password": "seb963", "Nome": "Sebina", "Cognome": "Calì", "Ruolo": "TECNICO"}, {"Matricola": "950", "Username": "giaca", "Password": "gia950", "Nome": "Giacomo", "Cognome": "Caragiulo", "Ruolo": "TECNICO"}, {"Matricola": "952", "Username": "adrici", "Password": "adr952", "Nome": "Adriano", "Cognome": "Cito", "Ruolo": "TECNICO"}, {"Matricola": "944", "Username": "giuga", "Password": "giu944", "Nome": "Giulia", "Cognome": "Galli", "Ruolo": "TECNICO"}, {"Matricola": "962", "Username": "giagi", "Password": "gia962", "Nome": "Gian Carlo", "Cognome": "Giovanardi", "Ruolo": "TECNICO"}, {"Matricola": "948", "Username": "ata", "Password": "ant948", "Nome": "Antonio", "Cognome": "Tamai", "Ruolo": "TECNICO"}, {"Matricola": "941", "Username": "robza", "Password": "rob941", "Nome": "Roberto", "Cognome": "Zanotti", "Ruolo": "TECNICO"}], "cantieri": [{"Codice": "476", "Descrizione": "Nuova villa Sanpa (San Patrignano)"}, {"Codice": "010", "Descrizione": "Ex Porcillaia San Patrignano (San Patrignano)"}, {"Codice": "443", "Descrizione": "Via Acquario (Rimini)"}, {"Codice": "483", "Descrizione": "Ex Enel (Rimini)"}, {"Codice": "448", "Descrizione": "Comparto Salnitrari (Tolentino)"}, {"Codice": "449", "Descrizione": "Casadidio (Tolentino)"}, {"Codice": "450", "Descrizione": "San Ginesio D'Angeli (Tolentino)"}, {"Codice": "451", "Descrizione": "Treia (Tolentino)"}, {"Codice": "452", "Descrizione": "Parapetti (Tolentino)"}, {"Codice": "SG0", "Descrizione": "Spese generali (Ufficio)"}, {"Codice": "004", "Descrizione": "Magazzino Rimini (Rimini)"}, {"Codice": "005", "Descrizione": "Magazzino Tolentino (Tolentino)"}, {"Codice": "006", "Descrizione": "Ufficio Tolentino (Tolentino)"}, {"Codice": "506", "Descrizione": "Villa Grappa (San Mauro)"}, {"Codice": "438", "Descrizione": "Via Zanella (Rimini)"}], "lavorazioni": [{"Codice": "A00", "Descrizione": "COSTI GENERALI"}, {"Codice": "A00A01", "Descrizione": "Amministrativi"}, {"Codice": "A00A02", "Descrizione": "Indiretti aziendali"}, {"Codice": "A00A05", "Descrizione": "Spese professionisti e laboratori"}, {"Codice": "A00A10", "Descrizione": "Indiretti di cantiere"}, {"Codice": "A00A20", "Descrizione": "Accantieramento e sicurezza"}, {"Codice": "B00", "Descrizione": "MOVIMENTO TERRE E PREPARAZIONI"}, {"Codice": "B00B01", "Descrizione": "Sgomberi, demolizioni e rimozioni"}, {"Codice": "B00B10", "Descrizione": "Scavi e rinterri"}, {"Codice": "C00", "Descrizione": "RISANAMENTI"}, {"Codice": "C00C01", "Descrizione": "Consolidamento terre"}, {"Codice": "C00C10", "Descrizione": "Consolidamento fondazioni"}, {"Codice": "C00C15", "Descrizione": "Consolidamento murature"}, {"Codice": "C00C20", "Descrizione": "Consolidamento solai e tetti"}, {"Codice": "D00", "Descrizione": "STRUTTURE"}, {"Codice": "D00D01", "Descrizione": "Fondazioni profonde"}, {"Codice": "D00D02", "Descrizione": "Opere strutturali generiche"}, {"Codice": "D00D10", "Descrizione": "Berlinesi diaframmi e tiranti"}, {"Codice": "D00D20", "Descrizione": "Opere di fondazione"}, {"Codice": "D00D30", "Descrizione": "Strutture portanti in elevazione"}, {"Codice": "D00D40", "Descrizione": "Solai"}, {"Codice": "D00D50", "Descrizione": "Strutture in CLS generiche"}, {"Codice": "D00D51", "Descrizione": "Strutture in acciaio generiche"}, {"Codice": "D00D52", "Descrizione": "Strutture in legno generiche"}, {"Codice": "D00D60", "Descrizione": "Strutture varie"}, {"Codice": "E00", "Descrizione": "OPERE PREFABBRICATE"}, {"Codice": "E00E01", "Descrizione": "Opere prefabbricate in CLS"}, {"Codice": "E00E10", "Descrizione": "Opere prefabbricate in legno"}, {"Codice": "E00E20", "Descrizione": "Opere prefabbricate in ferro"}, {"Codice": "F00", "Descrizione": "TAVOLATI"}, {"Codice": "F00F01", "Descrizione": "Murature in laterizio"}, {"Codice": "F00F05", "Descrizione": "Murature cementizie"}, {"Codice": "F00F10", "Descrizione": "Murature a secco"}, {"Codice": "F00F20", "Descrizione": "Murature in Gasbeton"}, {"Codice": "F00F21", "Descrizione": "Murature in Leca"}, {"Codice": "G00", "Descrizione": "OPERE EDILI DI FINITURA"}, {"Codice": "G00G01", "Descrizione": "Coibenti e anti rumore"}, {"Codice": "G00G10", "Descrizione": "Scarichi e ventilazioni"}, {"Codice": "G00G20", "Descrizione": "Controsoffitti"}, {"Codice": "G00G30", "Descrizione": "Intonaci"}, {"Codice": "G00G40", "Descrizione": "Sottofondi massetti Igloo"}, {"Codice": "G00G41", "Descrizione": "Pavimenti e rivestienti ceramici"}, {"Codice": "G00G44", "Descrizione": "Pavimenti in legno e composti"}, {"Codice": "G00G46", "Descrizione": "Pavimenti plastici vinilici e spatolati"}, {"Codice": "G00G50", "Descrizione": "Scale e pavimenti in marmo"}, {"Codice": "G00G60", "Descrizione": "Opere da imbianchino e tinteggiatore"}, {"Codice": "G00G70", "Descrizione": "Cappotto termico"}, {"Codice": "G00G75", "Descrizione": "Facciate ventilate"}, {"Codice": "G00G80", "Descrizione": "Impermeabilizzazioni"}, {"Codice": "H00", "Descrizione": "SERRAMENTI INTERNI ED ESTERNI"}, {"Codice": "H00H01", "Descrizione": "Controtelai e monoblocchi"}, {"Codice": "H00H10", "Descrizione": "Infissi esterni"}, {"Codice": "H00H20", "Descrizione": "Porte e portoncini"}, {"Codice": "H00H25", "Descrizione": "Porte metalliche tecniche"}, {"Codice": "H00H30", "Descrizione": "Sistemi oscuranti"}, {"Codice": "I00", "Descrizione": "OPERE DI FINITURA ESTERNE"}, {"Codice": "I00I01", "Descrizione": "Parapetti"}, {"Codice": "I00I10", "Descrizione": "Opere in copertura"}, {"Codice": "I00I20", "Descrizione": "Lattonerie"}, {"Codice": "I00I30", "Descrizione": "Opere metalliche non strutturali"}, {"Codice": "J00", "Descrizione": "OPERE DI URBANIZZAZIONE"}, {"Codice": "J00J01", "Descrizione": "Arredi urbani e condominiali"}, {"Codice": "J00J10", "Descrizione": "Muretti e recinzioni"}, {"Codice": "J00J20", "Descrizione": "Piazzali e parcheggi"}, {"Codice": "J00J30", "Descrizione": "Pavimentazioni esterne"}, {"Codice": "J00J40", "Descrizione": "Fognature e cavidotti"}, {"Codice": "L00", "Descrizione": "ELEVATORI"}, {"Codice": "L00L01", "Descrizione": "Ascensori"}, {"Codice": "L00L10", "Descrizione": "Montascale"}, {"Codice": "L00L20", "Descrizione": "Montauto"}, {"Codice": "M00", "Descrizione": "IMPIANTI ELETTRICI"}, {"Codice": "M00M01", "Descrizione": "Impianti elettrici parti comuni edificio"}, {"Codice": "M00M10", "Descrizione": "Impianti elettrici parti private"}, {"Codice": "M00M20", "Descrizione": "Impianti elettrici opere esterne"}, {"Codice": "M00M30", "Descrizione": "Domotica"}, {"Codice": "M00M40", "Descrizione": "Fotovoltaico e accumulo"}, {"Codice": "M00M50", "Descrizione": "Cabine di trsformazione"}, {"Codice": "N00", "Descrizione": "IMPIANTI MECCANICI"}, {"Codice": "N00N01", "Descrizione": "Impiantio idrico sanitario"}, {"Codice": "N00N10", "Descrizione": "Impiantio condizionamento e riscaldamento"}, {"Codice": "N00N20", "Descrizione": "Ventilazione Meccanica Controllata"}, {"Codice": "N00N30", "Descrizione": "Impianti speciali e trattamento acque"}, {"Codice": "N00N40", "Descrizione": "Impianti speciali ospedalieri"}, {"Codice": "O00", "Descrizione": "GIARDINAGGIO"}, {"Codice": "O00O01", "Descrizione": "Piantumazioni"}, {"Codice": "O00O10", "Descrizione": "Inerbimenti"}, {"Codice": "P00", "Descrizione": "ASSISTENZE EDILI"}, {"Codice": "P00P01", "Descrizione": "Assistenze edili generiche"}, {"Codice": "P00PM1", "Descrizione": "Assistenze edili imp. Elettrici"}, {"Codice": "P00PN1", "Descrizione": "Assistenze edili imp. Meccanici"}, {"Codice": "Z01", "Descrizione": "RIFACIMENTO BAGNI SANPA"}, {"Codice": "Z01Z01", "Descrizione": "VARIE"}, {"Codice": "Z02Z00", "Descrizione": "Finiture di fine cantiere"}], "cantiereLavorazioni": [{"Cantiere": "SG0", "Lavorazione": "A00A02"}, {"Cantiere": "004", "Lavorazione": "A00A02"}, {"Cantiere": "005", "Lavorazione": "A00A02"}, {"Cantiere": "006", "Lavorazione": "A00A02"}, {"Cantiere": "483", "Lavorazione": "A00A05"}, {"Cantiere": "483", "Lavorazione": "A00A20"}, {"Cantiere": "483", "Lavorazione": "B00B10"}, {"Cantiere": "483", "Lavorazione": "D00D50"}, {"Cantiere": "483", "Lavorazione": "D00D51"}, {"Cantiere": "483", "Lavorazione": "F00F01"}, {"Cantiere": "483", "Lavorazione": "F00F10"}, {"Cantiere": "483", "Lavorazione": "F00F21"}, {"Cantiere": "483", "Lavorazione": "G00G01"}, {"Cantiere": "483", "Lavorazione": "G00G20"}, {"Cantiere": "483", "Lavorazione": "G00G40"}, {"Cantiere": "483", "Lavorazione": "G00G41"}, {"Cantiere": "483", "Lavorazione": "G00G44"}, {"Cantiere": "483", "Lavorazione": "G00G50"}, {"Cantiere": "483", "Lavorazione": "G00G60"}, {"Cantiere": "483", "Lavorazione": "G00G70"}, {"Cantiere": "483", "Lavorazione": "G00G80"}, {"Cantiere": "483", "Lavorazione": "H00H01"}, {"Cantiere": "483", "Lavorazione": "H00H10"}, {"Cantiere": "483", "Lavorazione": "H00H25"}, {"Cantiere": "483", "Lavorazione": "H00H30"}, {"Cantiere": "483", "Lavorazione": "I00I30"}, {"Cantiere": "483", "Lavorazione": "J00"}, {"Cantiere": "483", "Lavorazione": "J00J01"}, {"Cantiere": "483", "Lavorazione": "J00J30"}, {"Cantiere": "483", "Lavorazione": "M00"}, {"Cantiere": "483", "Lavorazione": "N00"}, {"Cantiere": "483", "Lavorazione": "P00PM1"}, {"Cantiere": "483", "Lavorazione": "P00PN1"}, {"Cantiere": "483", "Lavorazione": "O00O01"}, {"Cantiere": "443", "Lavorazione": "A00A05"}, {"Cantiere": "443", "Lavorazione": "A00A10"}, {"Cantiere": "443", "Lavorazione": "A00A20"}, {"Cantiere": "443", "Lavorazione": "B00B01"}, {"Cantiere": "443", "Lavorazione": "B00B10"}, {"Cantiere": "443", "Lavorazione": "D00D01"}, {"Cantiere": "443", "Lavorazione": "D00D02"}, {"Cantiere": "443", "Lavorazione": "F00F01"}, {"Cantiere": "443", "Lavorazione": "F00F10"}, {"Cantiere": "443", "Lavorazione": "F00F21"}, {"Cantiere": "443", "Lavorazione": "G00G01"}, {"Cantiere": "443", "Lavorazione": "G00G10"}, {"Cantiere": "443", "Lavorazione": "G00G20"}, {"Cantiere": "443", "Lavorazione": "G00G30"}, {"Cantiere": "443", "Lavorazione": "G00G41"}, {"Cantiere": "443", "Lavorazione": "G00G44"}, {"Cantiere": "443", "Lavorazione": "G00G50"}, {"Cantiere": "443", "Lavorazione": "G00G60"}, {"Cantiere": "443", "Lavorazione": "G00G70"}, {"Cantiere": "443", "Lavorazione": "G00G80"}, {"Cantiere": "443", "Lavorazione": "H00H01"}, {"Cantiere": "443", "Lavorazione": "H00H10"}, {"Cantiere": "443", "Lavorazione": "H00H20"}, {"Cantiere": "443", "Lavorazione": "H00H25"}, {"Cantiere": "443", "Lavorazione": "H00H30"}, {"Cantiere": "443", "Lavorazione": "I00I01"}, {"Cantiere": "443", "Lavorazione": "I00I10"}, {"Cantiere": "443", "Lavorazione": "I00I20"}, {"Cantiere": "443", "Lavorazione": "I00I30"}, {"Cantiere": "443", "Lavorazione": "J00J30"}, {"Cantiere": "443", "Lavorazione": "J00J40"}, {"Cantiere": "443", "Lavorazione": "L00L01"}, {"Cantiere": "443", "Lavorazione": "M00"}, {"Cantiere": "443", "Lavorazione": "N00"}, {"Cantiere": "443", "Lavorazione": "O00"}, {"Cantiere": "443", "Lavorazione": "P00P01"}, {"Cantiere": "443", "Lavorazione": "P00PM1"}, {"Cantiere": "443", "Lavorazione": "P00PN1"}, {"Cantiere": "410", "Lavorazione": "A00"}, {"Cantiere": "410", "Lavorazione": "D00"}, {"Cantiere": "410", "Lavorazione": "F00"}, {"Cantiere": "410", "Lavorazione": "G00"}, {"Cantiere": "410", "Lavorazione": "H00"}, {"Cantiere": "410", "Lavorazione": "I00"}, {"Cantiere": "410", "Lavorazione": "M00"}, {"Cantiere": "410", "Lavorazione": "N00"}, {"Cantiere": "410", "Lavorazione": "P00"}, {"Cantiere": "448", "Lavorazione": "A00A02"}, {"Cantiere": "448", "Lavorazione": "A00A05"}, {"Cantiere": "448", "Lavorazione": "A00A10"}, {"Cantiere": "448", "Lavorazione": "A00A20"}, {"Cantiere": "448", "Lavorazione": "B00B01"}, {"Cantiere": "448", "Lavorazione": "B00B10"}, {"Cantiere": "448", "Lavorazione": "D00D01"}, {"Cantiere": "448", "Lavorazione": "D00D02"}, {"Cantiere": "448", "Lavorazione": "F00F01"}, {"Cantiere": "448", "Lavorazione": "F00F10"}, {"Cantiere": "448", "Lavorazione": "G00G30"}, {"Cantiere": "448", "Lavorazione": "G00G40"}, {"Cantiere": "448", "Lavorazione": "G00G60"}, {"Cantiere": "448", "Lavorazione": "G00G70"}, {"Cantiere": "448", "Lavorazione": "G00G80"}, {"Cantiere": "448", "Lavorazione": "H00"}, {"Cantiere": "448", "Lavorazione": "I00I10"}, {"Cantiere": "448", "Lavorazione": "I00I20"}, {"Cantiere": "448", "Lavorazione": "I00I30"}, {"Cantiere": "448", "Lavorazione": "J00J40"}, {"Cantiere": "448", "Lavorazione": "M00"}, {"Cantiere": "448", "Lavorazione": "N00"}, {"Cantiere": "449", "Lavorazione": "A00A02"}, {"Cantiere": "449", "Lavorazione": "A00A05"}, {"Cantiere": "449", "Lavorazione": "A00A10"}, {"Cantiere": "449", "Lavorazione": "A00A20"}, {"Cantiere": "449", "Lavorazione": "B00B01"}, {"Cantiere": "449", "Lavorazione": "C00C15"}, {"Cantiere": "449", "Lavorazione": "D00D40"}, {"Cantiere": "449", "Lavorazione": "F00F01"}, {"Cantiere": "449", "Lavorazione": "F00F10"}, {"Cantiere": "449", "Lavorazione": "G00G30"}, {"Cantiere": "449", "Lavorazione": "G00G41"}, {"Cantiere": "449", "Lavorazione": "G00G60"}, {"Cantiere": "449", "Lavorazione": "G00G80"}, {"Cantiere": "449", "Lavorazione": "H00H01"}, {"Cantiere": "449", "Lavorazione": "H00H10"}, {"Cantiere": "449", "Lavorazione": "H00H20"}, {"Cantiere": "449", "Lavorazione": "I00I10"}, {"Cantiere": "449", "Lavorazione": "I00I20"}, {"Cantiere": "449", "Lavorazione": "M00"}, {"Cantiere": "449", "Lavorazione": "N00"}, {"Cantiere": "450", "Lavorazione": "A00A02"}, {"Cantiere": "450", "Lavorazione": "A00A05"}, {"Cantiere": "450", "Lavorazione": "A00A10"}, {"Cantiere": "450", "Lavorazione": "A00A20"}, {"Cantiere": "450", "Lavorazione": "B00B01"}, {"Cantiere": "450", "Lavorazione": "B00B10"}, {"Cantiere": "450", "Lavorazione": "D00D02"}, {"Cantiere": "450", "Lavorazione": "F00F01"}, {"Cantiere": "450", "Lavorazione": "F00F10"}, {"Cantiere": "450", "Lavorazione": "G00G30"}, {"Cantiere": "450", "Lavorazione": "G00G40"}, {"Cantiere": "450", "Lavorazione": "G00G60"}, {"Cantiere": "450", "Lavorazione": "G00G70"}, {"Cantiere": "450", "Lavorazione": "G00G80"}, {"Cantiere": "450", "Lavorazione": "H00"}, {"Cantiere": "450", "Lavorazione": "I00I10"}, {"Cantiere": "450", "Lavorazione": "I00I20"}, {"Cantiere": "450", "Lavorazione": "J00J40"}, {"Cantiere": "450", "Lavorazione": "J00"}, {"Cantiere": "450", "Lavorazione": "M00"}, {"Cantiere": "450", "Lavorazione": "N00"}, {"Cantiere": "452", "Lavorazione": "A00A02"}, {"Cantiere": "452", "Lavorazione": "A00A05"}, {"Cantiere": "452", "Lavorazione": "A00A10"}, {"Cantiere": "452", "Lavorazione": "A00A20"}, {"Cantiere": "452", "Lavorazione": "B00B01"}, {"Cantiere": "452", "Lavorazione": "B00B10"}, {"Cantiere": "452", "Lavorazione": "D00D01"}, {"Cantiere": "452", "Lavorazione": "D00D02"}, {"Cantiere": "452", "Lavorazione": "F00F01"}, {"Cantiere": "452", "Lavorazione": "F00F10"}, {"Cantiere": "452", "Lavorazione": "G00G30"}, {"Cantiere": "452", "Lavorazione": "G00G40"}, {"Cantiere": "452", "Lavorazione": "G00G60"}, {"Cantiere": "452", "Lavorazione": "G00G70"}, {"Cantiere": "452", "Lavorazione": "G00G80"}, {"Cantiere": "452", "Lavorazione": "H00"}, {"Cantiere": "452", "Lavorazione": "I00I10"}, {"Cantiere": "452", "Lavorazione": "I00I20"}, {"Cantiere": "452", "Lavorazione": "I00I30"}, {"Cantiere": "452", "Lavorazione": "J00J40"}, {"Cantiere": "452", "Lavorazione": "M00"}, {"Cantiere": "452", "Lavorazione": "N00"}, {"Cantiere": "506", "Lavorazione": "A00A02"}, {"Cantiere": "506", "Lavorazione": "A00A10"}, {"Cantiere": "506", "Lavorazione": "A00A20"}, {"Cantiere": "506", "Lavorazione": "I00"}, {"Cantiere": "438", "Lavorazione": "Z02Z00"}, {"Cantiere": "476", "Lavorazione": "A00A01"}, {"Cantiere": "476", "Lavorazione": "A00A02"}, {"Cantiere": "476", "Lavorazione": "A00A05"}, {"Cantiere": "476", "Lavorazione": "A00A10"}, {"Cantiere": "476", "Lavorazione": "A00A20"}, {"Cantiere": "476", "Lavorazione": "B00B01"}, {"Cantiere": "476", "Lavorazione": "B00B10"}, {"Cantiere": "476", "Lavorazione": "D00D01"}, {"Cantiere": "476", "Lavorazione": "D00D02"}, {"Cantiere": "476", "Lavorazione": "F00F01"}, {"Cantiere": "476", "Lavorazione": "F00F10"}, {"Cantiere": "476", "Lavorazione": "F00F21"}, {"Cantiere": "476", "Lavorazione": "G00G01"}, {"Cantiere": "476", "Lavorazione": "G00G10"}, {"Cantiere": "476", "Lavorazione": "G00G20"}, {"Cantiere": "476", "Lavorazione": "G00G30"}, {"Cantiere": "476", "Lavorazione": "G00G40"}, {"Cantiere": "476", "Lavorazione": "G00G41"}, {"Cantiere": "476", "Lavorazione": "G00G44"}, {"Cantiere": "476", "Lavorazione": "G00G50"}, {"Cantiere": "476", "Lavorazione": "G00G60"}, {"Cantiere": "476", "Lavorazione": "G00G70"}, {"Cantiere": "476", "Lavorazione": "G00G80"}, {"Cantiere": "476", "Lavorazione": "H00H01"}, {"Cantiere": "476", "Lavorazione": "H00H10"}, {"Cantiere": "476", "Lavorazione": "H00H20"}, {"Cantiere": "476", "Lavorazione": "H00H25"}, {"Cantiere": "476", "Lavorazione": "H00H30"}, {"Cantiere": "476", "Lavorazione": "I00I01"}, {"Cantiere": "476", "Lavorazione": "I00I10"}, {"Cantiere": "476", "Lavorazione": "I00I20"}, {"Cantiere": "476", "Lavorazione": "I00I30"}, {"Cantiere": "476", "Lavorazione": "J00J30"}, {"Cantiere": "476", "Lavorazione": "J00J40"}, {"Cantiere": "476", "Lavorazione": "L00L01"}, {"Cantiere": "476", "Lavorazione": "M00M01"}, {"Cantiere": "476", "Lavorazione": "M00M40"}, {"Cantiere": "476", "Lavorazione": "N00"}, {"Cantiere": "476", "Lavorazione": "O00O01"}, {"Cantiere": "476", "Lavorazione": "P00P01"}, {"Cantiere": "476", "Lavorazione": "P00PM1"}, {"Cantiere": "476", "Lavorazione": "P00PN1"}]};
+        const DB_FACTORY = {"utenti": [{"Matricola": "144", "Username": "besal", "Password": "bes144", "Nome": "Besnik", "Cognome": "Alhysa", "Ruolo": "OPERAIO"}, {"Matricola": "90", "Username": "benav", "Password": "ben90", "Nome": "Benito", "Cognome": "Avarello", "Ruolo": "OPERAIO"}, {"Matricola": "83", "Username": "albas", "Password": "alb83", "Nome": "Alberto", "Cognome": "Bastoni", "Ruolo": "CAPOCANTIERE,OPERAIO"}, {"Matricola": "40", "Username": "agobu", "Password": "buc40", "Nome": "Agostino", "Cognome": "Bucca", "Ruolo": "CAPOCANTIERE,OPERAIO"}, {"Matricola": "88", "Username": "amci", "Password": "amb88", "Nome": "Ambrogio", "Cognome": "Cito", "Ruolo": "CAPOCANTIERE,OPERAIO"}, {"Matricola": "143", "Username": "tauco", "Password": "tau143", "Nome": "Taulant", "Cognome": "Cohodari", "Ruolo": "OPERAIO"}, {"Matricola": "123", "Username": "aliefa", "Password": "ali123", "Nome": "Alieu", "Cognome": "Faye", "Ruolo": "OPERAIO"}, {"Matricola": "142", "Username": "sabis", "Password": "sab142", "Nome": "Sabedin", "Cognome": "Isenovski", "Ruolo": "OPERAIO"}, {"Matricola": "141", "Username": "fatka", "Password": "fat141", "Nome": "Fatmir", "Cognome": "Karaj", "Ruolo": "OPERAIO"}, {"Matricola": "102", "Username": "nicmo", "Password": "nic102", "Nome": "Nicolo'", "Cognome": "Morreale", "Ruolo": "OPERAIO"}, {"Matricola": "23", "Username": "pasmo", "Password": "pas23", "Nome": "Pasqualino", "Cognome": "Morreale", "Ruolo": "OPERAIO"}, {"Matricola": "28", "Username": "mapre", "Password": "mas28", "Nome": "Massimo", "Cognome": "Pretelli", "Ruolo": "CAPOCANTIERE,OPERAIO"}, {"Matricola": "126", "Username": "adrad", "Password": "adz126", "Nome": "Adzi", "Cognome": "Radovesi", "Ruolo": "OPERAIO"}, {"Matricola": "32", "Username": "filro", "Password": "fil32", "Nome": "Filippo", "Cognome": "Rosa", "Ruolo": "OPERAIO"}, {"Matricola": "93", "Username": "lase", "Password": "lua93", "Nome": "Luan", "Cognome": "Selimi", "Ruolo": "OPERAIO"}, {"Matricola": "113", "Username": "giost", "Password": "gio113", "Nome": "Giovanni", "Cognome": "Stasi", "Ruolo": "CAPOCANTIERE,OPERAIO"}, {"Matricola": "87", "Username": "giaur", "Password": "gia87", "Nome": "Gianfranco", "Cognome": "Urbinati", "Ruolo": "OPERAIO"}, {"Matricola": "106", "Username": "chuye", "Password": "chu106", "Nome": "Chukwuma", "Cognome": "Yekini", "Ruolo": "OPERAIO"}, {"Matricola": "954", "Username": "fedto", "Password": "fed954", "Nome": "Federico", "Cognome": "Togni", "Ruolo": "CAPOCANTIERE,OPERAIO"}, {"Matricola": "963", "Username": "sebca", "Password": "seb963", "Nome": "Sebina", "Cognome": "Calì", "Ruolo": "TECNICO"}, {"Matricola": "950", "Username": "giaca", "Password": "gia950", "Nome": "Giacomo", "Cognome": "Caragiulo", "Ruolo": "TECNICO"}, {"Matricola": "952", "Username": "adrici", "Password": "adr952", "Nome": "Adriano", "Cognome": "Cito", "Ruolo": "TECNICO"}, {"Matricola": "944", "Username": "giuga", "Password": "giu944", "Nome": "Giulia", "Cognome": "Galli", "Ruolo": "TECNICO"}, {"Matricola": "962", "Username": "giagi", "Password": "gia962", "Nome": "Gian Carlo", "Cognome": "Giovanardi", "Ruolo": "TECNICO"}, {"Matricola": "948", "Username": "ata", "Password": "ant948", "Nome": "Antonio", "Cognome": "Tamai", "Ruolo": "TECNICO"}, {"Matricola": "941", "Username": "robza", "Password": "rob941", "Nome": "Roberto", "Cognome": "Zanotti", "Ruolo": "TECNICO"}], "cantieri": [{"Codice": "476", "Descrizione": "Nuova villa Sanpa (San Patrignano)", "Citta": "Coriano", "Provincia": "RN"}, {"Codice": "010", "Descrizione": "Ex Porcillaia San Patrignano (San Patrignano)", "Citta": "Coriano", "Provincia": "RN"}, {"Codice": "443", "Descrizione": "Via Acquario (Rimini)", "Citta": "Rimini", "Provincia": "RN"}, {"Codice": "483", "Descrizione": "Ex Enel (Rimini)", "Citta": "Rimini", "Provincia": "RN"}, {"Codice": "448", "Descrizione": "Comparto Salnitrari (Tolentino)", "Citta": "Tolentino", "Provincia": "MC"}, {"Codice": "449", "Descrizione": "Casadidio (Tolentino)", "Citta": "Tolentino", "Provincia": "MC"}, {"Codice": "450", "Descrizione": "San Ginesio D'Angeli (Tolentino)", "Citta": "San Ginesio", "Provincia": "MC"}, {"Codice": "451", "Descrizione": "Treia (Tolentino)", "Citta": "Treia", "Provincia": "MC"}, {"Codice": "452", "Descrizione": "Parapetti (Tolentino)", "Citta": "Tolentino", "Provincia": "MC"}, {"Codice": "SG0", "Descrizione": "Spese generali (Ufficio)", "Citta": "Rimini", "Provincia": "RN"}, {"Codice": "004", "Descrizione": "Magazzino Rimini (Rimini)", "Citta": "Rimini", "Provincia": "RN"}, {"Codice": "005", "Descrizione": "Magazzino Tolentino (Tolentino)", "Citta": "Tolentino", "Provincia": "MC"}, {"Codice": "006", "Descrizione": "Ufficio Tolentino (Tolentino)", "Citta": "Tolentino", "Provincia": "MC"}, {"Codice": "506", "Descrizione": "Villa Grappa (San Mauro)", "Citta": "San Mauro Pascoli", "Provincia": "FC"}, {"Codice": "438", "Descrizione": "Via Zanella (Rimini)", "Citta": "Rimini", "Provincia": "RN"}], "lavorazioni": [{"Codice": "A00", "Descrizione": "COSTI GENERALI"}, {"Codice": "A00A01", "Descrizione": "Amministrativi"}, {"Codice": "A00A02", "Descrizione": "Indiretti aziendali"}, {"Codice": "A00A05", "Descrizione": "Spese professionisti e laboratori"}, {"Codice": "A00A10", "Descrizione": "Indiretti di cantiere"}, {"Codice": "A00A20", "Descrizione": "Accantieramento e sicurezza"}, {"Codice": "B00", "Descrizione": "MOVIMENTO TERRE E PREPARAZIONI"}, {"Codice": "B00B01", "Descrizione": "Sgomberi, demolizioni e rimozioni"}, {"Codice": "B00B10", "Descrizione": "Scavi e rinterri"}, {"Codice": "C00", "Descrizione": "RISANAMENTI"}, {"Codice": "C00C01", "Descrizione": "Consolidamento terre"}, {"Codice": "C00C10", "Descrizione": "Consolidamento fondazioni"}, {"Codice": "C00C15", "Descrizione": "Consolidamento murature"}, {"Codice": "C00C20", "Descrizione": "Consolidamento solai e tetti"}, {"Codice": "D00", "Descrizione": "STRUTTURE"}, {"Codice": "D00D01", "Descrizione": "Fondazioni profonde"}, {"Codice": "D00D02", "Descrizione": "Opere strutturali generiche"}, {"Codice": "D00D10", "Descrizione": "Berlinesi diaframmi e tiranti"}, {"Codice": "D00D20", "Descrizione": "Opere di fondazione"}, {"Codice": "D00D30", "Descrizione": "Strutture portanti in elevazione"}, {"Codice": "D00D40", "Descrizione": "Solai"}, {"Codice": "D00D50", "Descrizione": "Strutture in CLS generiche"}, {"Codice": "D00D51", "Descrizione": "Strutture in acciaio generiche"}, {"Codice": "D00D52", "Descrizione": "Strutture in legno generiche"}, {"Codice": "D00D60", "Descrizione": "Strutture varie"}, {"Codice": "E00", "Descrizione": "OPERE PREFABBRICATE"}, {"Codice": "E00E01", "Descrizione": "Opere prefabbricate in CLS"}, {"Codice": "E00E10", "Descrizione": "Opere prefabbricate in legno"}, {"Codice": "E00E20", "Descrizione": "Opere prefabbricate in ferro"}, {"Codice": "F00", "Descrizione": "TAVOLATI"}, {"Codice": "F00F01", "Descrizione": "Murature in laterizio"}, {"Codice": "F00F05", "Descrizione": "Murature cementizie"}, {"Codice": "F00F10", "Descrizione": "Murature a secco"}, {"Codice": "F00F20", "Descrizione": "Murature in Gasbeton"}, {"Codice": "F00F21", "Descrizione": "Murature in Leca"}, {"Codice": "G00", "Descrizione": "OPERE EDILI DI FINITURA"}, {"Codice": "G00G01", "Descrizione": "Coibenti e anti rumore"}, {"Codice": "G00G10", "Descrizione": "Scarichi e ventilazioni"}, {"Codice": "G00G20", "Descrizione": "Controsoffitti"}, {"Codice": "G00G30", "Descrizione": "Intonaci"}, {"Codice": "G00G40", "Descrizione": "Sottofondi massetti Igloo"}, {"Codice": "G00G41", "Descrizione": "Pavimenti e rivestienti ceramici"}, {"Codice": "G00G44", "Descrizione": "Pavimenti in legno e composti"}, {"Codice": "G00G46", "Descrizione": "Pavimenti plastici vinilici e spatolati"}, {"Codice": "G00G50", "Descrizione": "Scale e pavimenti in marmo"}, {"Codice": "G00G60", "Descrizione": "Opere da imbianchino e tinteggiatore"}, {"Codice": "G00G70", "Descrizione": "Cappotto termico"}, {"Codice": "G00G75", "Descrizione": "Facciate ventilate"}, {"Codice": "G00G80", "Descrizione": "Impermeabilizzazioni"}, {"Codice": "H00", "Descrizione": "SERRAMENTI INTERNI ED ESTERNI"}, {"Codice": "H00H01", "Descrizione": "Controtelai e monoblocchi"}, {"Codice": "H00H10", "Descrizione": "Infissi esterni"}, {"Codice": "H00H20", "Descrizione": "Porte e portoncini"}, {"Codice": "H00H25", "Descrizione": "Porte metalliche tecniche"}, {"Codice": "H00H30", "Descrizione": "Sistemi oscuranti"}, {"Codice": "I00", "Descrizione": "OPERE DI FINITURA ESTERNE"}, {"Codice": "I00I01", "Descrizione": "Parapetti"}, {"Codice": "I00I10", "Descrizione": "Opere in copertura"}, {"Codice": "I00I20", "Descrizione": "Lattonerie"}, {"Codice": "I00I30", "Descrizione": "Opere metalliche non strutturali"}, {"Codice": "J00", "Descrizione": "OPERE DI URBANIZZAZIONE"}, {"Codice": "J00J01", "Descrizione": "Arredi urbani e condominiali"}, {"Codice": "J00J10", "Descrizione": "Muretti e recinzioni"}, {"Codice": "J00J20", "Descrizione": "Piazzali e parcheggi"}, {"Codice": "J00J30", "Descrizione": "Pavimentazioni esterne"}, {"Codice": "J00J40", "Descrizione": "Fognature e cavidotti"}, {"Codice": "L00", "Descrizione": "ELEVATORI"}, {"Codice": "L00L01", "Descrizione": "Ascensori"}, {"Codice": "L00L10", "Descrizione": "Montascale"}, {"Codice": "L00L20", "Descrizione": "Montauto"}, {"Codice": "M00", "Descrizione": "IMPIANTI ELETTRICI"}, {"Codice": "M00M01", "Descrizione": "Impianti elettrici parti comuni edificio"}, {"Codice": "M00M10", "Descrizione": "Impianti elettrici parti private"}, {"Codice": "M00M20", "Descrizione": "Impianti elettrici opere esterne"}, {"Codice": "M00M30", "Descrizione": "Domotica"}, {"Codice": "M00M40", "Descrizione": "Fotovoltaico e accumulo"}, {"Codice": "M00M50", "Descrizione": "Cabine di trsformazione"}, {"Codice": "N00", "Descrizione": "IMPIANTI MECCANICI"}, {"Codice": "N00N01", "Descrizione": "Impiantio idrico sanitario"}, {"Codice": "N00N10", "Descrizione": "Impiantio condizionamento e riscaldamento"}, {"Codice": "N00N20", "Descrizione": "Ventilazione Meccanica Controllata"}, {"Codice": "N00N30", "Descrizione": "Impianti speciali e trattamento acque"}, {"Codice": "N00N40", "Descrizione": "Impianti speciali ospedalieri"}, {"Codice": "O00", "Descrizione": "GIARDINAGGIO"}, {"Codice": "O00O01", "Descrizione": "Piantumazioni"}, {"Codice": "O00O10", "Descrizione": "Inerbimenti"}, {"Codice": "P00", "Descrizione": "ASSISTENZE EDILI"}, {"Codice": "P00P01", "Descrizione": "Assistenze edili generiche"}, {"Codice": "P00PM1", "Descrizione": "Assistenze edili imp. Elettrici"}, {"Codice": "P00PN1", "Descrizione": "Assistenze edili imp. Meccanici"}, {"Codice": "Z01", "Descrizione": "RIFACIMENTO BAGNI SANPA"}, {"Codice": "Z01Z01", "Descrizione": "VARIE"}, {"Codice": "Z02Z00", "Descrizione": "Finiture di fine cantiere"}], "cantiereLavorazioni": [{"Cantiere": "SG0", "Lavorazione": "A00A02"}, {"Cantiere": "004", "Lavorazione": "A00A02"}, {"Cantiere": "005", "Lavorazione": "A00A02"}, {"Cantiere": "006", "Lavorazione": "A00A02"}, {"Cantiere": "483", "Lavorazione": "A00A05"}, {"Cantiere": "483", "Lavorazione": "A00A20"}, {"Cantiere": "483", "Lavorazione": "B00B10"}, {"Cantiere": "483", "Lavorazione": "D00D50"}, {"Cantiere": "483", "Lavorazione": "D00D51"}, {"Cantiere": "483", "Lavorazione": "F00F01"}, {"Cantiere": "483", "Lavorazione": "F00F10"}, {"Cantiere": "483", "Lavorazione": "F00F21"}, {"Cantiere": "483", "Lavorazione": "G00G01"}, {"Cantiere": "483", "Lavorazione": "G00G20"}, {"Cantiere": "483", "Lavorazione": "G00G40"}, {"Cantiere": "483", "Lavorazione": "G00G41"}, {"Cantiere": "483", "Lavorazione": "G00G44"}, {"Cantiere": "483", "Lavorazione": "G00G50"}, {"Cantiere": "483", "Lavorazione": "G00G60"}, {"Cantiere": "483", "Lavorazione": "G00G70"}, {"Cantiere": "483", "Lavorazione": "G00G80"}, {"Cantiere": "483", "Lavorazione": "H00H01"}, {"Cantiere": "483", "Lavorazione": "H00H10"}, {"Cantiere": "483", "Lavorazione": "H00H25"}, {"Cantiere": "483", "Lavorazione": "H00H30"}, {"Cantiere": "483", "Lavorazione": "I00I30"}, {"Cantiere": "483", "Lavorazione": "J00"}, {"Cantiere": "483", "Lavorazione": "J00J01"}, {"Cantiere": "483", "Lavorazione": "J00J30"}, {"Cantiere": "483", "Lavorazione": "M00"}, {"Cantiere": "483", "Lavorazione": "N00"}, {"Cantiere": "483", "Lavorazione": "P00PM1"}, {"Cantiere": "483", "Lavorazione": "P00PN1"}, {"Cantiere": "483", "Lavorazione": "O00O01"}, {"Cantiere": "443", "Lavorazione": "A00A05"}, {"Cantiere": "443", "Lavorazione": "A00A10"}, {"Cantiere": "443", "Lavorazione": "A00A20"}, {"Cantiere": "443", "Lavorazione": "B00B01"}, {"Cantiere": "443", "Lavorazione": "B00B10"}, {"Cantiere": "443", "Lavorazione": "D00D01"}, {"Cantiere": "443", "Lavorazione": "D00D02"}, {"Cantiere": "443", "Lavorazione": "F00F01"}, {"Cantiere": "443", "Lavorazione": "F00F10"}, {"Cantiere": "443", "Lavorazione": "F00F21"}, {"Cantiere": "443", "Lavorazione": "G00G01"}, {"Cantiere": "443", "Lavorazione": "G00G10"}, {"Cantiere": "443", "Lavorazione": "G00G20"}, {"Cantiere": "443", "Lavorazione": "G00G30"}, {"Cantiere": "443", "Lavorazione": "G00G41"}, {"Cantiere": "443", "Lavorazione": "G00G44"}, {"Cantiere": "443", "Lavorazione": "G00G50"}, {"Cantiere": "443", "Lavorazione": "G00G60"}, {"Cantiere": "443", "Lavorazione": "G00G70"}, {"Cantiere": "443", "Lavorazione": "G00G80"}, {"Cantiere": "443", "Lavorazione": "H00H01"}, {"Cantiere": "443", "Lavorazione": "H00H10"}, {"Cantiere": "443", "Lavorazione": "H00H20"}, {"Cantiere": "443", "Lavorazione": "H00H25"}, {"Cantiere": "443", "Lavorazione": "H00H30"}, {"Cantiere": "443", "Lavorazione": "I00I01"}, {"Cantiere": "443", "Lavorazione": "I00I10"}, {"Cantiere": "443", "Lavorazione": "I00I20"}, {"Cantiere": "443", "Lavorazione": "I00I30"}, {"Cantiere": "443", "Lavorazione": "J00J30"}, {"Cantiere": "443", "Lavorazione": "J00J40"}, {"Cantiere": "443", "Lavorazione": "L00L01"}, {"Cantiere": "443", "Lavorazione": "M00"}, {"Cantiere": "443", "Lavorazione": "N00"}, {"Cantiere": "443", "Lavorazione": "O00"}, {"Cantiere": "443", "Lavorazione": "P00P01"}, {"Cantiere": "443", "Lavorazione": "P00PM1"}, {"Cantiere": "443", "Lavorazione": "P00PN1"}, {"Cantiere": "410", "Lavorazione": "A00"}, {"Cantiere": "410", "Lavorazione": "D00"}, {"Cantiere": "410", "Lavorazione": "F00"}, {"Cantiere": "410", "Lavorazione": "G00"}, {"Cantiere": "410", "Lavorazione": "H00"}, {"Cantiere": "410", "Lavorazione": "I00"}, {"Cantiere": "410", "Lavorazione": "M00"}, {"Cantiere": "410", "Lavorazione": "N00"}, {"Cantiere": "410", "Lavorazione": "P00"}, {"Cantiere": "448", "Lavorazione": "A00A02"}, {"Cantiere": "448", "Lavorazione": "A00A05"}, {"Cantiere": "448", "Lavorazione": "A00A10"}, {"Cantiere": "448", "Lavorazione": "A00A20"}, {"Cantiere": "448", "Lavorazione": "B00B01"}, {"Cantiere": "448", "Lavorazione": "B00B10"}, {"Cantiere": "448", "Lavorazione": "D00D01"}, {"Cantiere": "448", "Lavorazione": "D00D02"}, {"Cantiere": "448", "Lavorazione": "F00F01"}, {"Cantiere": "448", "Lavorazione": "F00F10"}, {"Cantiere": "448", "Lavorazione": "G00G30"}, {"Cantiere": "448", "Lavorazione": "G00G40"}, {"Cantiere": "448", "Lavorazione": "G00G60"}, {"Cantiere": "448", "Lavorazione": "G00G70"}, {"Cantiere": "448", "Lavorazione": "G00G80"}, {"Cantiere": "448", "Lavorazione": "H00"}, {"Cantiere": "448", "Lavorazione": "I00I10"}, {"Cantiere": "448", "Lavorazione": "I00I20"}, {"Cantiere": "448", "Lavorazione": "I00I30"}, {"Cantiere": "448", "Lavorazione": "J00J40"}, {"Cantiere": "448", "Lavorazione": "M00"}, {"Cantiere": "448", "Lavorazione": "N00"}, {"Cantiere": "449", "Lavorazione": "A00A02"}, {"Cantiere": "449", "Lavorazione": "A00A05"}, {"Cantiere": "449", "Lavorazione": "A00A10"}, {"Cantiere": "449", "Lavorazione": "A00A20"}, {"Cantiere": "449", "Lavorazione": "B00B01"}, {"Cantiere": "449", "Lavorazione": "C00C15"}, {"Cantiere": "449", "Lavorazione": "D00D40"}, {"Cantiere": "449", "Lavorazione": "F00F01"}, {"Cantiere": "449", "Lavorazione": "F00F10"}, {"Cantiere": "449", "Lavorazione": "G00G30"}, {"Cantiere": "449", "Lavorazione": "G00G41"}, {"Cantiere": "449", "Lavorazione": "G00G60"}, {"Cantiere": "449", "Lavorazione": "G00G80"}, {"Cantiere": "449", "Lavorazione": "H00H01"}, {"Cantiere": "449", "Lavorazione": "H00H10"}, {"Cantiere": "449", "Lavorazione": "H00H20"}, {"Cantiere": "449", "Lavorazione": "I00I10"}, {"Cantiere": "449", "Lavorazione": "I00I20"}, {"Cantiere": "449", "Lavorazione": "M00"}, {"Cantiere": "449", "Lavorazione": "N00"}, {"Cantiere": "450", "Lavorazione": "A00A02"}, {"Cantiere": "450", "Lavorazione": "A00A05"}, {"Cantiere": "450", "Lavorazione": "A00A10"}, {"Cantiere": "450", "Lavorazione": "A00A20"}, {"Cantiere": "450", "Lavorazione": "B00B01"}, {"Cantiere": "450", "Lavorazione": "B00B10"}, {"Cantiere": "450", "Lavorazione": "D00D02"}, {"Cantiere": "450", "Lavorazione": "F00F01"}, {"Cantiere": "450", "Lavorazione": "F00F10"}, {"Cantiere": "450", "Lavorazione": "G00G30"}, {"Cantiere": "450", "Lavorazione": "G00G40"}, {"Cantiere": "450", "Lavorazione": "G00G60"}, {"Cantiere": "450", "Lavorazione": "G00G70"}, {"Cantiere": "450", "Lavorazione": "G00G80"}, {"Cantiere": "450", "Lavorazione": "H00"}, {"Cantiere": "450", "Lavorazione": "I00I10"}, {"Cantiere": "450", "Lavorazione": "I00I20"}, {"Cantiere": "450", "Lavorazione": "J00J40"}, {"Cantiere": "450", "Lavorazione": "J00"}, {"Cantiere": "450", "Lavorazione": "M00"}, {"Cantiere": "450", "Lavorazione": "N00"}, {"Cantiere": "452", "Lavorazione": "A00A02"}, {"Cantiere": "452", "Lavorazione": "A00A05"}, {"Cantiere": "452", "Lavorazione": "A00A10"}, {"Cantiere": "452", "Lavorazione": "A00A20"}, {"Cantiere": "452", "Lavorazione": "B00B01"}, {"Cantiere": "452", "Lavorazione": "B00B10"}, {"Cantiere": "452", "Lavorazione": "D00D01"}, {"Cantiere": "452", "Lavorazione": "D00D02"}, {"Cantiere": "452", "Lavorazione": "F00F01"}, {"Cantiere": "452", "Lavorazione": "F00F10"}, {"Cantiere": "452", "Lavorazione": "G00G30"}, {"Cantiere": "452", "Lavorazione": "G00G40"}, {"Cantiere": "452", "Lavorazione": "G00G60"}, {"Cantiere": "452", "Lavorazione": "G00G70"}, {"Cantiere": "452", "Lavorazione": "G00G80"}, {"Cantiere": "452", "Lavorazione": "H00"}, {"Cantiere": "452", "Lavorazione": "I00I10"}, {"Cantiere": "452", "Lavorazione": "I00I20"}, {"Cantiere": "452", "Lavorazione": "I00I30"}, {"Cantiere": "452", "Lavorazione": "J00J40"}, {"Cantiere": "452", "Lavorazione": "M00"}, {"Cantiere": "452", "Lavorazione": "N00"}, {"Cantiere": "506", "Lavorazione": "A00A02"}, {"Cantiere": "506", "Lavorazione": "A00A10"}, {"Cantiere": "506", "Lavorazione": "A00A20"}, {"Cantiere": "506", "Lavorazione": "I00"}, {"Cantiere": "438", "Lavorazione": "Z02Z00"}, {"Cantiere": "476", "Lavorazione": "A00A01"}, {"Cantiere": "476", "Lavorazione": "A00A02"}, {"Cantiere": "476", "Lavorazione": "A00A05"}, {"Cantiere": "476", "Lavorazione": "A00A10"}, {"Cantiere": "476", "Lavorazione": "A00A20"}, {"Cantiere": "476", "Lavorazione": "B00B01"}, {"Cantiere": "476", "Lavorazione": "B00B10"}, {"Cantiere": "476", "Lavorazione": "D00D01"}, {"Cantiere": "476", "Lavorazione": "D00D02"}, {"Cantiere": "476", "Lavorazione": "F00F01"}, {"Cantiere": "476", "Lavorazione": "F00F10"}, {"Cantiere": "476", "Lavorazione": "F00F21"}, {"Cantiere": "476", "Lavorazione": "G00G01"}, {"Cantiere": "476", "Lavorazione": "G00G10"}, {"Cantiere": "476", "Lavorazione": "G00G20"}, {"Cantiere": "476", "Lavorazione": "G00G30"}, {"Cantiere": "476", "Lavorazione": "G00G40"}, {"Cantiere": "476", "Lavorazione": "G00G41"}, {"Cantiere": "476", "Lavorazione": "G00G44"}, {"Cantiere": "476", "Lavorazione": "G00G50"}, {"Cantiere": "476", "Lavorazione": "G00G60"}, {"Cantiere": "476", "Lavorazione": "G00G70"}, {"Cantiere": "476", "Lavorazione": "G00G80"}, {"Cantiere": "476", "Lavorazione": "H00H01"}, {"Cantiere": "476", "Lavorazione": "H00H10"}, {"Cantiere": "476", "Lavorazione": "H00H20"}, {"Cantiere": "476", "Lavorazione": "H00H25"}, {"Cantiere": "476", "Lavorazione": "H00H30"}, {"Cantiere": "476", "Lavorazione": "I00I01"}, {"Cantiere": "476", "Lavorazione": "I00I10"}, {"Cantiere": "476", "Lavorazione": "I00I20"}, {"Cantiere": "476", "Lavorazione": "I00I30"}, {"Cantiere": "476", "Lavorazione": "J00J30"}, {"Cantiere": "476", "Lavorazione": "J00J40"}, {"Cantiere": "476", "Lavorazione": "L00L01"}, {"Cantiere": "476", "Lavorazione": "M00M01"}, {"Cantiere": "476", "Lavorazione": "M00M40"}, {"Cantiere": "476", "Lavorazione": "N00"}, {"Cantiere": "476", "Lavorazione": "O00O01"}, {"Cantiere": "476", "Lavorazione": "P00P01"}, {"Cantiere": "476", "Lavorazione": "P00PM1"}, {"Cantiere": "476", "Lavorazione": "P00PN1"}]};
 
         // Account di sistema gestiti internamente (non mostrati nella tabella dipendenti)
         const SYSTEM_ACCOUNTS = [
@@ -575,9 +600,19 @@
                 if (idx === -1) {
                     cantieri.push(fc);
                     modificato = true;
-                } else if (cantieri[idx].Descrizione !== fc.Descrizione) {
-                    cantieri[idx].Descrizione = fc.Descrizione;
-                    modificato = true;
+                } else {
+                    if (cantieri[idx].Descrizione !== fc.Descrizione) {
+                        cantieri[idx].Descrizione = fc.Descrizione;
+                        modificato = true;
+                    }
+                    if (!cantieri[idx].Citta && fc.Citta) {
+                        cantieri[idx].Citta = fc.Citta;
+                        modificato = true;
+                    }
+                    if (!cantieri[idx].Provincia && fc.Provincia) {
+                        cantieri[idx].Provincia = fc.Provincia;
+                        modificato = true;
+                    }
                 }
             });
 
@@ -869,17 +904,21 @@
         function aggiornaTabelleAdmin() {
             ordinaCantieriPerCodice();
             ordinaUtentiPerCognome();
-            document.querySelector('#admTblCantieri tbody').innerHTML = DB.cantieri.map((c, idx) => `
+            document.querySelector('#admTblCantieri tbody').innerHTML = DB.cantieri.map((c, idx) => {
+                const luogoStr = c.Citta ? `${c.Citta}${c.Provincia ? ' (' + c.Provincia + ')' : ''}` : '<span style="color:var(--text-muted);">-</span>';
+                return `
                 <tr class="${editIdxCantiere === idx ? 'editing-row' : ''}">
                     <td><b>${c.Codice}</b></td>
                     <td>${c.Descrizione}</td>
+                    <td>${luogoStr}</td>
                     <td>
                         <div class="action-btns">
                             <button class="btn btn-info btn-sm" onclick="adminPreparaModificaCantiere(${idx})">Modifica</button>
                             <button class="btn btn-danger btn-sm" onclick="adminElimina('cantieri', ${idx})">Elimina</button>
                         </div>
                     </td>
-                </tr>`).join('');
+                </tr>`;
+            }).join('');
 
             const tuttiUtenti = pulisciUtentiSistema(DB.utenti);
             const numDisabilitati = tuttiUtenti.filter(u => isUtenteDisabilitato(u)).length;
@@ -942,8 +981,10 @@
         function adminPreparaModificaCantiere(idx) {
             editIdxCantiere = idx;
             const c = DB.cantieri[idx];
-            document.getElementById('admCantCod').value = c.Codice;
-            document.getElementById('admCantDesc').value = c.Descrizione;
+            document.getElementById('admCantCod').value = c.Codice || '';
+            document.getElementById('admCantDesc').value = c.Descrizione || '';
+            document.getElementById('admCantCitta').value = c.Citta || '';
+            document.getElementById('admCantProv').value = c.Provincia || '';
             document.getElementById('boxAdminCantieri').classList.add('edit-mode');
             document.getElementById('btnSalvaCantiere').innerText = "💾 Salva Modifiche";
             document.getElementById('btnAnnullaCantiere').classList.remove('hidden');
@@ -954,6 +995,8 @@
             editIdxCantiere = -1;
             document.getElementById('admCantCod').value = '';
             document.getElementById('admCantDesc').value = '';
+            document.getElementById('admCantCitta').value = '';
+            document.getElementById('admCantProv').value = '';
             document.getElementById('boxAdminCantieri').classList.remove('edit-mode');
             document.getElementById('btnSalvaCantiere').innerText = "+ Aggiungi Cantiere";
             document.getElementById('btnAnnullaCantiere').classList.add('hidden');
@@ -963,19 +1006,25 @@
         function adminSalvaCantiere() {
             const cod = document.getElementById('admCantCod').value.trim().toUpperCase();
             const desc = document.getElementById('admCantDesc').value.trim();
-            if (!cod || !desc) return alert("Compila sia Codice che Descrizione.");
+            const citta = document.getElementById('admCantCitta').value.trim();
+            const prov = document.getElementById('admCantProv').value.trim().toUpperCase();
+            if (!cod || !desc || !citta || !prov) return alert("Compila Codice, Descrizione, Città e Provincia.");
+
+            const nuovoCant = { Codice: cod, Descrizione: desc, Citta: citta, Provincia: prov };
 
             if (editIdxCantiere > -1) {
                 const vecchioCodice = DB.cantieri[editIdxCantiere].Codice;
-                DB.cantieri[editIdxCantiere] = { Codice: cod, Descrizione: desc };
+                DB.cantieri[editIdxCantiere] = nuovoCant;
                 if (vecchioCodice !== cod) {
                     DB.cantiereLavorazioni.forEach(r => { if (r.Cantiere === vecchioCodice) r.Cantiere = cod; });
                 }
                 adminAnnullaModificaCantiere();
             } else {
-                DB.cantieri.push({ Codice: cod, Descrizione: desc });
+                DB.cantieri.push(nuovoCant);
                 document.getElementById('admCantCod').value = '';
                 document.getElementById('admCantDesc').value = '';
+                document.getElementById('admCantCitta').value = '';
+                document.getElementById('admCantProv').value = '';
             }
             salvaSuCloud();
             aggiornaTabelleAdmin();
@@ -1334,7 +1383,9 @@
             const ordVal = preset ? preset.ordinarie : oreDefault;
             const strVal = preset ? preset.straordinari : 0;
             const ferVal = preset ? preset.ferie : 0;
+            const perVal = preset ? preset.permessi : 0;
             const cigVal = preset ? preset.cig : 0;
+            const malVal = preset ? preset.malattia : 0;
             const noteVal = preset ? (preset.note || '') : '';
 
             return `
@@ -1357,11 +1408,13 @@
                         </select>
                     </div>
                 </div>
-                <div class="row">
+                <div class="ore-grid">
                     <div><label>Ore Ordinarie</label><input type="number" class="g-ore" min="0" max="14" step="0.5" value="${ordVal}"></div>
-                    <div><label>Straordinari</label><input type="number" class="g-straord" min="0" max="8" step="0.5" value="${strVal}"></div>
-                    <div><label>Ferie / Perm.</label><input type="number" class="g-ferie" min="0" max="8" step="0.5" value="${ferVal}"></div>
+                    <div><label>Straordinarie</label><input type="number" class="g-straord" min="0" max="8" step="0.5" value="${strVal}"></div>
+                    <div><label>Ferie</label><input type="number" class="g-ferie" min="0" max="8" step="0.5" value="${ferVal}"></div>
+                    <div><label>Permessi</label><input type="number" class="g-permessi" min="0" max="8" step="0.5" value="${perVal}"></div>
                     <div><label>C. Integrazione</label><input type="number" class="g-cig" min="0" max="8" step="0.5" value="${cigVal}"></div>
+                    <div><label>Malattia</label><input type="number" class="g-malattia" min="0" max="8" step="0.5" value="${malVal}"></div>
                 </div>
                 <div><label>Note / Eventi</label><input type="text" class="g-note" value="${noteVal.replace(/"/g, '&quot;')}" placeholder="Es. pioggia, trasferimento cantiere, materiale..."></div>
             </div>`;
@@ -1401,7 +1454,9 @@
                     ordinarie: pRow.querySelector('.g-ore').value,
                     straordinari: pRow.querySelector('.g-straord').value,
                     ferie: pRow.querySelector('.g-ferie').value,
+                    permessi: pRow.querySelector('.g-permessi').value,
                     cig: pRow.querySelector('.g-cig').value,
+                    malattia: pRow.querySelector('.g-malattia').value,
                     note: pRow.querySelector('.g-note').value
                 };
                 list.insertAdjacentHTML('beforeend', creaBloccoAttivitaHtml(8, idx === 0, preset));
@@ -1490,7 +1545,7 @@
             let giornate = [];
             let cantieriUsatiMap = {};
             let lavorazioniUsateMap = {};
-            let tO = 0, tS = 0, tF = 0, tC = 0;
+            let tO = 0, tS = 0, tF = 0, tP = 0, tC = 0, tM = 0;
             let erroreValidazione = null;
 
             schede.forEach(card => {
@@ -1506,10 +1561,12 @@
                     let valO = parseFloat(row.querySelector('.g-ore').value) || 0;
                     let valS = parseFloat(row.querySelector('.g-straord').value) || 0;
                     let valF = parseFloat(row.querySelector('.g-ferie').value) || 0;
+                    let valP = parseFloat(row.querySelector('.g-permessi').value) || 0;
                     let valC = parseFloat(row.querySelector('.g-cig').value) || 0;
+                    let valM = parseFloat(row.querySelector('.g-malattia').value) || 0;
                     let note = row.querySelector('.g-note').value.trim();
 
-                    const hasHoursOrNote = (valO > 0 || valS > 0 || valF > 0 || valC > 0 || note !== '');
+                    const hasHoursOrNote = (valO > 0 || valS > 0 || valF > 0 || valP > 0 || valC > 0 || valM > 0 || note !== '');
                     if (!hasHoursOrNote) return;
 
                     if (!cantiereCod || !lavorazioneCod) {
@@ -1529,16 +1586,20 @@
                         data: dataIso,
                         cantiereCodice: cantiereCod,
                         cantiereDescrizione: cantiereDesc,
+                        cantiereCitta: cantObj ? (cantObj.Citta || '') : '',
+                        cantiereProvincia: cantObj ? (cantObj.Provincia || '') : '',
                         lavorazioneCodice: lavorazioneCod,
                         lavorazioneDescrizione: lavorazioneDesc,
                         ordinarie: valO,
                         straordinari: valS,
                         ferie: valF,
+                        permessi: valP,
                         cig: valC,
+                        malattia: valM,
                         note: note
                     });
 
-                    tO += valO; tS += valS; tF += valF; tC += valC;
+                    tO += valO; tS += valS; tF += valF; tP += valP; tC += valC; tM += valM;
                 });
             });
 
@@ -1576,7 +1637,9 @@
                 totaleOrdinarie: tO,
                 totaleStraordinari: tS,
                 totaleFerie: tF,
+                totalePermessi: tP,
                 totaleCig: tC,
+                totaleMalattia: tM,
                 stato: 'NUOVO'
             };
         }
@@ -1706,28 +1769,82 @@
             }
         }
 
+        const GIORNI_LUNGHI = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
+        const GIORNI_BREVI = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
+
+        function formatDataStampaBreve(dateIso) {
+            if (!dateIso || !dateIso.includes('-')) return dateIso || '';
+            const parts = dateIso.split('-').map(Number);
+            if (parts.length !== 3 || parts.some(isNaN)) return dateIso;
+            const [y, m, d] = parts;
+            const dt = new Date(Date.UTC(y, m - 1, d));
+            const dayName = GIORNI_BREVI[dt.getUTCDay()];
+            const dd = String(d).padStart(2, '0');
+            const mm = String(m).padStart(2, '0');
+            const yy = String(y).slice(-2);
+            return `${dayName} ${dd}/${mm}/${yy}`;
+        }
+
+        function formatDataStampaLunga(dateIso) {
+            if (!dateIso || !dateIso.includes('-')) return dateIso || '';
+            const parts = dateIso.split('-').map(Number);
+            if (parts.length !== 3 || parts.some(isNaN)) return dateIso;
+            const [y, m, d] = parts;
+            const dt = new Date(Date.UTC(y, m - 1, d));
+            const dayName = GIORNI_LUNGHI[dt.getUTCDay()];
+            const dd = String(d).padStart(2, '0');
+            const mm = String(m).padStart(2, '0');
+            const yy = String(y).slice(-2);
+            return `${dayName} ${dd}/${mm}/${yy}`;
+        }
+
+        function formatPeriodoStampa(dataDal, dataAl, giornate) {
+            let d1 = dataDal;
+            let d2 = dataAl;
+            if ((!d1 || !d2) && Array.isArray(giornate) && giornate.length > 0) {
+                const dates = giornate.map(g => g.data).filter(Boolean).sort();
+                if (dates.length > 0) {
+                    d1 = d1 || dates[0];
+                    d2 = d2 || dates[dates.length - 1];
+                }
+            }
+            if (!d1 && !d2) return '';
+            if (!d2 || d1 === d2) return formatDataStampaLunga(d1);
+            return `Da ${formatDataStampaLunga(d1)} al ${formatDataStampaLunga(d2)}`;
+        }
+
         function buildRigaRapportinoGestoreHtml(r, fCant) {
             const stato = r.stato || 'NUOVO';
             const badgeStato = stato === 'ELABORATO'
                 ? '<span class="status-pill status-elaborato">ELABORATO</span>'
                 : '<span class="status-pill status-nuovo">DA ELABORARE</span>';
 
-            let rOrd = 0, rStr = 0, rFer = 0, rCig = 0;
+            let rOrd = 0, rStr = 0, rFer = 0, rPer = 0, rCig = 0, rMal = 0;
             const dettaglioHtml = (r.giornate || []).map(g => {
                 const gCantCode = g.cantiereCodice || r.cantiereCodice;
                 if (fCant && gCantCode !== fCant) return '';
-                rOrd += Number(g.ordinarie || 0);
-                rStr += Number(g.straordinari || 0);
-                rFer += Number(g.ferie || 0);
-                rCig += Number(g.cig || 0);
+                const vOrd = Number(g.ordinarie || 0);
+                const vStr = Number(g.straordinari || 0);
+                const vFer = Number(g.ferie || 0);
+                const vPer = Number(g.permessi || 0);
+                const vCig = Number(g.cig || 0);
+                const vMal = Number(g.malattia || 0);
+                rOrd += vOrd;
+                rStr += vStr;
+                rFer += vFer;
+                rPer += vPer;
+                rCig += vCig;
+                rMal += vMal;
 
-                const dIt = (g.data || '').split('-').reverse().join('/');
+                const dIt = formatDataStampaBreve(g.data || '');
                 const gCantDesc = g.cantiereDescrizione || r.cantiereDescrizione;
                 const gLavDesc = g.lavorazioneDescrizione || r.lavorazioneDescrizione;
-                let riga = `<b>${dIt}</b> [<span style="color:var(--primary); font-weight:600;">${gCantDesc}</span> - ${gLavDesc}]: Ord <b>${g.ordinarie}h</b>`;
-                if (g.straordinari > 0) riga += `, Str <b>${g.straordinari}h</b>`;
-                if (g.ferie > 0) riga += `, Fer ${g.ferie}h`;
-                if (g.cig > 0) riga += `, CIG ${g.cig}h`;
+                let riga = `<b>${dIt}</b> [<span style="color:var(--primary); font-weight:600;">${gCantDesc}</span> - ${gLavDesc}]: Ord <b>${vOrd}h</b>`;
+                if (vStr > 0) riga += `, Str <b>${vStr}h</b>`;
+                if (vFer > 0) riga += `, Fer ${vFer}h`;
+                if (vPer > 0) riga += `, Perm ${vPer}h`;
+                if (vCig > 0) riga += `, CIG ${vCig}h`;
+                if (vMal > 0) riga += `, Mal ${vMal}h`;
                 if (g.note) riga += ` <i>(${g.note})</i>`;
                 return `<div style="margin-bottom:3px;">${riga}</div>`;
             }).join('');
@@ -1742,7 +1859,9 @@
                     Ord: <b>${rOrd}h</b><br>
                     Str: <b>${rStr}h</b><br>
                     ${rFer > 0 ? `Fer: <b>${rFer}h</b><br>` : ''}
-                    ${rCig > 0 ? `CIG: <b>${rCig}h</b>` : ''}
+                    ${rPer > 0 ? `Perm: <b>${rPer}h</b><br>` : ''}
+                    ${rCig > 0 ? `CIG: <b>${rCig}h</b><br>` : ''}
+                    ${rMal > 0 ? `Mal: <b>${rMal}h</b>` : ''}
                 </td>
                 <td>${badgeStato}</td>
                 <td class="no-print">
@@ -1762,7 +1881,7 @@
             const fCant = document.getElementById('fltCantiere').value;
             const fStato = document.getElementById('fltStato').value;
             const lista = getRapportiniFiltrati();
-            let tOrd = 0, tStr = 0, tFer = 0, tCig = 0;
+            let tOrd = 0, tStr = 0, tFer = 0, tPer = 0, tCig = 0, tMal = 0;
 
             lista.forEach(r => {
                 (r.giornate || []).forEach(g => {
@@ -1771,7 +1890,9 @@
                     tOrd += Number(g.ordinarie || 0);
                     tStr += Number(g.straordinari || 0);
                     tFer += Number(g.ferie || 0);
+                    tPer += Number(g.permessi || 0);
                     tCig += Number(g.cig || 0);
+                    tMal += Number(g.malattia || 0);
                 });
             });
 
@@ -1779,7 +1900,9 @@
             document.getElementById('kpiOrd').innerText = tOrd + 'h';
             document.getElementById('kpiStr').innerText = tStr + 'h';
             document.getElementById('kpiFer').innerText = tFer + 'h';
+            document.getElementById('kpiPer').innerText = tPer + 'h';
             document.getElementById('kpiCig').innerText = tCig + 'h';
+            document.getElementById('kpiMal').innerText = tMal + 'h';
 
             const nuovi = lista.filter(r => (r.stato || 'NUOVO') !== 'ELABORATO');
             const elaborati = lista.filter(r => (r.stato || 'NUOVO') === 'ELABORATO');
@@ -1830,32 +1953,234 @@
             }
         }
 
-        function buildHtmlSchedaStampa(r, idx, total, pageBreak, fCant = '') {
-            const dd = (r.dataDal || '').split('-').reverse().join('/');
-            const da = (r.dataAl || '').split('-').reverse().join('/');
-            let sOrd = 0, sStr = 0, sFer = 0, sCig = 0;
+        // ============================================================
+        // MOTORE CONDIZIONI ATMOSFERICHE PER STAMPA (con cache locale)
+        // ============================================================
+        const FALLBACK_COORDS_IT = {
+            "rimini": { lat: 44.0678, lon: 12.5695 },
+            "coriano": { lat: 43.9675, lon: 12.6003 },
+            "san patrignano": { lat: 43.9675, lon: 12.6003 },
+            "tolentino": { lat: 43.2089, lon: 13.2856 },
+            "san ginesio": { lat: 43.1086, lon: 13.3189 },
+            "treia": { lat: 43.3114, lon: 13.3136 },
+            "san mauro pascoli": { lat: 44.1047, lon: 12.4167 },
+            "san mauro": { lat: 44.1047, lon: 12.4167 }
+        };
+
+        function loadJsonCache(key) {
+            try { return JSON.parse(localStorage.getItem(key) || '{}'); } catch (e) { return {}; }
+        }
+        function saveJsonCache(key, obj) {
+            try { localStorage.setItem(key, JSON.stringify(obj)); } catch (e) {}
+        }
+
+        function risolviLuogoCantiere(cantiereCodice, cantiereDescrizione, gCitta, gProv) {
+            let citta = String(gCitta || '').trim();
+            let prov = String(gProv || '').trim().toUpperCase();
+
+            if (!citta && cantiereCodice) {
+                const cObj = DB.cantieri.find(c => String(c.Codice).trim() === String(cantiereCodice).trim());
+                if (cObj && cObj.Citta) {
+                    citta = String(cObj.Citta).trim();
+                    prov = String(cObj.Provincia || '').trim().toUpperCase();
+                }
+            }
+            if (!citta && cantiereCodice) {
+                const fObj = DB_FACTORY.cantieri.find(c => String(c.Codice).trim() === String(cantiereCodice).trim());
+                if (fObj && fObj.Citta) {
+                    citta = String(fObj.Citta).trim();
+                    prov = String(fObj.Provincia || '').trim().toUpperCase();
+                }
+            }
+            if (!citta && cantiereDescrizione) {
+                const m = String(cantiereDescrizione).match(/\(([^)]+)\)/);
+                if (m && m[1]) {
+                    const raw = m[1].trim();
+                    const low = raw.toLowerCase();
+                    if (low === 'ufficio') { citta = 'Rimini'; prov = 'RN'; }
+                    else if (low.includes('patrignano')) { citta = 'Coriano'; prov = 'RN'; }
+                    else if (low === 'san mauro') { citta = 'San Mauro Pascoli'; prov = 'FC'; }
+                    else { citta = raw; }
+                }
+            }
+            return { citta, provincia: prov };
+        }
+
+        async function fetchWithTimeout(url, ms = 4500) {
+            const ctrl = new AbortController();
+            const timer = setTimeout(() => ctrl.abort(), ms);
+            try {
+                const res = await fetch(url, { signal: ctrl.signal });
+                clearTimeout(timer);
+                if (!res.ok) return null;
+                return await res.json();
+            } catch (e) {
+                clearTimeout(timer);
+                return null;
+            }
+        }
+
+        async function getCoordsForCity(citta, provincia) {
+            if (!citta) return null;
+            const normKey = (citta + '|' + (provincia || '')).toLowerCase().trim();
+            const geoCache = loadJsonCache('edile_geo_cache_v1');
+            if (geoCache[normKey]) return geoCache[normKey];
+
+            const qUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(citta)}&count=5&language=it&format=json&countryCode=IT`;
+            const data = await fetchWithTimeout(qUrl, 4000);
+            if (data && Array.isArray(data.results) && data.results.length > 0) {
+                let best = data.results[0];
+                if (provincia) {
+                    const pLow = provincia.toLowerCase();
+                    const match = data.results.find(r =>
+                        String(r.admin2 || '').toLowerCase().includes(pLow) ||
+                        String(r.admin3 || '').toLowerCase().includes(pLow)
+                    );
+                    if (match) best = match;
+                }
+                const coords = { lat: best.latitude, lon: best.longitude };
+                geoCache[normKey] = coords;
+                saveJsonCache('edile_geo_cache_v1', geoCache);
+                return coords;
+            }
+
+            const fb = FALLBACK_COORDS_IT[citta.toLowerCase().trim()];
+            if (fb) return fb;
+            return null;
+        }
+
+        function decodificaMeteoWMO(code, rainMm) {
+            const c = Number(code);
+            let desc = '';
+            if (c === 0) desc = 'Sereno';
+            else if (c === 1) desc = 'Preval. sereno';
+            else if (c === 2) desc = 'Parz. nuvoloso';
+            else if (c === 3) desc = 'Coperto';
+            else if (c === 45 || c === 48) desc = 'Nebbia';
+            else if (c === 51 || c === 53 || c === 55) desc = 'Pioviggine';
+            else if (c === 56 || c === 57) desc = 'Pioviggine gelata';
+            else if (c === 61) desc = 'Pioggia debole';
+            else if (c === 63) desc = 'Pioggia moderata';
+            else if (c === 65) desc = 'Pioggia forte';
+            else if (c === 66 || c === 67) desc = 'Pioggia gelata';
+            else if (c >= 71 && c <= 77) desc = 'Neve';
+            else if (c >= 80 && c <= 82) desc = 'Rovesci';
+            else if (c === 85 || c === 86) desc = 'Rovesci di neve';
+            else if (c >= 95) desc = 'Temporale';
+            else desc = 'Variabile';
+
+            const mm = Number(rainMm || 0);
+            if (mm >= 1 && c >= 51) {
+                desc += ` (${Math.round(mm)}mm)`;
+            }
+            return desc;
+        }
+
+        async function fetchMeteoGiorno(citta, provincia, dateIso) {
+            if (!citta || !dateIso || !dateIso.includes('-')) return '';
+            const cacheKey = `${citta.toLowerCase()}|${(provincia || '').toLowerCase()}|${dateIso}`;
+            const meteoCache = loadJsonCache('edile_meteo_cache_v1');
+            if (meteoCache[cacheKey]) return meteoCache[cacheKey];
+
+            const coords = await getCoordsForCity(citta, provincia);
+            if (!coords) return '';
+
+            const today = new Date();
+            const target = new Date(dateIso + 'T12:00:00Z');
+            const diffDays = Math.round((today.getTime() - target.getTime()) / 86400000);
+
+            // Se data troppo nel futuro (>14 giorni), meteo non disponibile
+            if (diffDays < -14) return '';
+
+            const baseUrl = diffDays > 60
+                ? 'https://archive-api.open-meteo.com/v1/archive'
+                : 'https://api.open-meteo.com/v1/forecast';
+
+            const url = `${baseUrl}?latitude=${coords.lat}&longitude=${coords.lon}&daily=weather_code,precipitation_sum&timezone=Europe%2FRome&start_date=${dateIso}&end_date=${dateIso}`;
+            const data = await fetchWithTimeout(url, 4500);
+            if (data && data.daily && Array.isArray(data.daily.weather_code) && data.daily.weather_code.length > 0 && data.daily.weather_code[0] !== null) {
+                const txt = decodificaMeteoWMO(data.daily.weather_code[0], data.daily.precipitation_sum ? data.daily.precipitation_sum[0] : 0);
+                // Salva in cache solo le date passate (non le previsioni future)
+                if (diffDays > 0) {
+                    meteoCache[cacheKey] = txt;
+                    saveJsonCache('edile_meteo_cache_v1', meteoCache);
+                }
+                return txt;
+            }
+            return '';
+        }
+
+        async function caricaMeteoPerListaRapportini(lista, fCant = '') {
+            const requestsMap = new Map();
+            lista.forEach(r => {
+                (r.giornate || []).forEach(g => {
+                    const gCantCode = g.cantiereCodice || r.cantiereCodice;
+                    if (fCant && gCantCode !== fCant) return;
+                    const gCantDesc = g.cantiereDescrizione || r.cantiereDescrizione;
+                    const luogo = risolviLuogoCantiere(gCantCode, gCantDesc, g.cantiereCitta, g.cantiereProvincia);
+                    if (luogo.citta && g.data) {
+                        const k = `${luogo.citta.toLowerCase()}|${luogo.provincia.toLowerCase()}|${g.data}`;
+                        if (!requestsMap.has(k)) {
+                            requestsMap.set(k, { citta: luogo.citta, provincia: luogo.provincia, data: g.data });
+                        }
+                    }
+                });
+            });
+
+            const results = {};
+            const entries = Array.from(requestsMap.entries());
+            await Promise.all(entries.map(async ([k, req]) => {
+                const txt = await fetchMeteoGiorno(req.citta, req.provincia, req.data);
+                if (txt) results[k] = txt;
+            }));
+            return results;
+        }
+
+        function buildHtmlSchedaStampa(r, idx, total, pageBreak, fCant = '', meteoMap = {}) {
+            const periodoLabel = formatPeriodoStampa(r.dataDal, r.dataAl, r.giornate);
+            let sOrd = 0, sStr = 0, sFer = 0, sPer = 0, sCig = 0, sMal = 0;
+            const notesList = [];
 
             const rowsHtml = (r.giornate || []).map(g => {
                 const gCantCode = g.cantiereCodice || r.cantiereCodice;
                 if (fCant && gCantCode !== fCant) return '';
-                sOrd += Number(g.ordinarie || 0);
-                sStr += Number(g.straordinari || 0);
-                sFer += Number(g.ferie || 0);
-                sCig += Number(g.cig || 0);
+                const vOrd = Number(g.ordinarie || 0);
+                const vStr = Number(g.straordinari || 0);
+                const vFer = Number(g.ferie || 0);
+                const vPer = Number(g.permessi || 0);
+                const vCig = Number(g.cig || 0);
+                const vMal = Number(g.malattia || 0);
+                sOrd += vOrd;
+                sStr += vStr;
+                sFer += vFer;
+                sPer += vPer;
+                sCig += vCig;
+                sMal += vMal;
 
-                const dIt = (g.data || '').split('-').reverse().join('/');
+                const dShort = formatDataStampaBreve(g.data || '');
                 const gCantDesc = g.cantiereDescrizione || r.cantiereDescrizione;
                 const gLavDesc = g.lavorazioneDescrizione || r.lavorazioneDescrizione;
+                const luogo = risolviLuogoCantiere(gCantCode, gCantDesc, g.cantiereCitta, g.cantiereProvincia);
+                const mKey = luogo.citta && g.data ? `${luogo.citta.toLowerCase()}|${luogo.provincia.toLowerCase()}|${g.data}` : '';
+                const meteoTxt = (mKey && meteoMap[mKey]) ? meteoMap[mKey] : '';
+
+                if (g.note && String(g.note).trim() !== '') {
+                    notesList.push({ data: dShort, note: String(g.note).trim() });
+                }
                 return `
                 <tr>
-                    <td style="white-space:nowrap;">${dIt}</td>
+                    <td style="white-space:nowrap;">
+                        <div>${dShort}</div>
+                        ${meteoTxt ? `<div class="print-meteo-sub">${meteoTxt}</div>` : ''}
+                    </td>
                     <td>${gCantDesc}</td>
                     <td>${gLavDesc}</td>
-                    <td style="text-align:center;"><b>${g.ordinarie}h</b></td>
-                    <td style="text-align:center;">${g.straordinari}h</td>
-                    <td style="text-align:center;">${g.ferie}h</td>
-                    <td style="text-align:center;">${g.cig}h</td>
-                    <td>${g.note || ''}</td>
+                    <td style="text-align:center;"><b>${vOrd}h</b></td>
+                    <td style="text-align:center;">${vStr}h</td>
+                    <td style="text-align:center;">${vFer}h</td>
+                    <td style="text-align:center;">${vPer}h</td>
+                    <td style="text-align:center;">${vCig}h</td>
+                    <td style="text-align:center;">${vMal}h</td>
                 </tr>`;
             }).join('');
 
@@ -1864,6 +2189,18 @@
 
             return `
             <div class="print-rap-sheet${breakClass}">
+                <div class="print-sheet-top">
+                    <div class="print-rap-title">Gestione Rapportini Ricevuti — ${APP_VERSION}</div>
+                    <div class="print-sheet-period">${periodoLabel}</div>
+                </div>
+                <div class="print-kpi-grid">
+                    <div class="print-kpi-box"><div class="print-kpi-val">${sOrd}h</div><div class="print-kpi-lbl">ORE ORDINARIE</div></div>
+                    <div class="print-kpi-box"><div class="print-kpi-val">${sStr}h</div><div class="print-kpi-lbl">STRAORDINARIE</div></div>
+                    <div class="print-kpi-box"><div class="print-kpi-val">${sFer}h</div><div class="print-kpi-lbl">FERIE</div></div>
+                    <div class="print-kpi-box"><div class="print-kpi-val">${sPer}h</div><div class="print-kpi-lbl">PERMESSI</div></div>
+                    <div class="print-kpi-box"><div class="print-kpi-val">${sCig}h</div><div class="print-kpi-lbl">CIG</div></div>
+                    <div class="print-kpi-box"><div class="print-kpi-val">${sMal}h</div><div class="print-kpi-lbl">MALATTIA</div></div>
+                </div>
                 <div class="print-rap-header">
                     <div>
                         <div class="print-rap-title">EDILE COSTRUZIONI — SCHEDA RAPPORTINO ORE (Invio #${idx + 1} di ${total})</div>
@@ -1873,7 +2210,7 @@
                 </div>
                 <div class="print-rap-meta">
                     <strong>Lavoratore:</strong> ${r.lavoratoreNome} (Matricola: ${r.lavoratoreMatricola}) &nbsp;|&nbsp;
-                    <strong>Periodo:</strong> dal ${dd} al ${da}<br>
+                    <strong>Periodo:</strong> ${periodoLabel}<br>
                     <strong>Compilato da:</strong> ${r.compilatoDa || '-'} &nbsp;|&nbsp;
                     <strong>Stato:</strong> ${r.stato || 'NUOVO'}
                 </div>
@@ -1885,34 +2222,57 @@
                             <th>Lavorazione</th>
                             <th style="text-align:center;">Ord.</th>
                             <th style="text-align:center;">Str.</th>
-                            <th style="text-align:center;">Fer/Perm</th>
+                            <th style="text-align:center;">Ferie</th>
+                            <th style="text-align:center;">Permessi</th>
                             <th style="text-align:center;">CIG</th>
-                            <th>Note</th>
+                            <th style="text-align:center;">Malattia</th>
                         </tr>
                     </thead>
                     <tbody>${rowsHtml}</tbody>
                 </table>
                 <div class="print-rap-totals">
-                    TOTALE INVIO: Ordinarie ${sOrd}h &nbsp;|&nbsp; Straordinari ${sStr}h &nbsp;|&nbsp; Ferie/Permessi ${sFer}h &nbsp;|&nbsp; CIG ${sCig}h
+                    TOTALE INVIO: Ordinarie ${sOrd}h &nbsp;|&nbsp; Straordinarie ${sStr}h &nbsp;|&nbsp; Ferie ${sFer}h &nbsp;|&nbsp; Permessi ${sPer}h &nbsp;|&nbsp; CIG ${sCig}h &nbsp;|&nbsp; Malattia ${sMal}h
                 </div>
+                ${notesList.length > 0 ? `
+                <div class="print-rap-notes">
+                    <div class="print-rap-notes-title">Note</div>
+                    ${notesList.map(n => `<div class="print-rap-note-item"><span class="print-rap-note-date">${n.data}</span><span>${n.note}</span></div>`).join('')}
+                </div>` : ''}
             </div>`;
         }
 
-        function stampaRapportiniGestore(pageBreakPerInvio = true) {
+        async function stampaRapportiniGestore(pageBreakPerInvio = true) {
             const lista = getRapportiniFiltrati();
             if (lista.length === 0) return alert("Nessun rapportino da stampare con i filtri attuali.");
             const fCant = document.getElementById('fltCantiere').value;
 
+            const loadEl = document.getElementById('printLoadingAlert');
+            if (loadEl) loadEl.classList.remove('hidden');
+            let meteoMap = {};
+            try {
+                meteoMap = await caricaMeteoPerListaRapportini(lista, fCant);
+            } catch (e) {}
+            if (loadEl) loadEl.classList.add('hidden');
+
             const container = document.getElementById('printSheetsContainer');
-            container.innerHTML = lista.map((r, idx) => buildHtmlSchedaStampa(r, idx, lista.length, pageBreakPerInvio, fCant)).join('');
+            container.innerHTML = lista.map((r, idx) => buildHtmlSchedaStampa(r, idx, lista.length, pageBreakPerInvio, fCant, meteoMap)).join('');
             window.print();
         }
 
-        function stampaSingoloInvio(id) {
+        async function stampaSingoloInvio(id) {
             const r = RAPPORTINI_CLOUD.find(item => item.id === id);
             if (!r) return alert("Rapportino non trovato.");
+
+            const loadEl = document.getElementById('printLoadingAlert');
+            if (loadEl) loadEl.classList.remove('hidden');
+            let meteoMap = {};
+            try {
+                meteoMap = await caricaMeteoPerListaRapportini([r], '');
+            } catch (e) {}
+            if (loadEl) loadEl.classList.add('hidden');
+
             const container = document.getElementById('printSheetsContainer');
-            container.innerHTML = buildHtmlSchedaStampa(r, 0, 1, false, '');
+            container.innerHTML = buildHtmlSchedaStampa(r, 0, 1, false, '', meteoMap);
             window.print();
         }
 
@@ -1935,15 +2295,17 @@
                         "Data Invio": r.dataInvio || '',
                         "Matricola": r.lavoratoreMatricola,
                         "Lavoratore": r.lavoratoreNome,
-                        "Data Lavoro": (g.data || '').split('-').reverse().join('/'),
+                        "Data Lavoro": formatDataStampaBreve(g.data || ''),
                         "Codice Cantiere": gCantCode,
                         "Cantiere": gCantDesc,
                         "Codice Lavorazione": gLavCode,
                         "Lavorazione": gLavDesc,
                         "Ore Ordinarie": Number(g.ordinarie || 0),
                         "Ore Straordinarie": Number(g.straordinari || 0),
-                        "Ferie / Permessi": Number(g.ferie || 0),
+                        "Ferie": Number(g.ferie || 0),
+                        "Permessi": Number(g.permessi || 0),
                         "CIG": Number(g.cig || 0),
+                        "Malattia": Number(g.malattia || 0),
                         "Note": g.note || '',
                         "Stato": r.stato || 'NUOVO',
                         "Compilato Da": r.compilatoDa || ''
@@ -1967,8 +2329,8 @@
             if (!inputEmail) return;
             localStorage.setItem('edile_gestore_email', inputEmail.trim());
 
-            const dd = (r.dataDal || '').split('-').reverse().join('/');
-            const da = (r.dataAl || '').split('-').reverse().join('/');
+            const periodoLabel = formatPeriodoStampa(r.dataDal, r.dataAl, r.giornate);
+            let tO = 0, tS = 0, tF = 0, tP = 0, tC = 0, tM = 0;
 
             let corpo = `RAPPORTINO ORE - EDILE COSTRUZIONI
 ` +
@@ -1976,7 +2338,7 @@
 ` +
                         `Lavoratore: ${r.lavoratoreNome} (Matr. ${r.lavoratoreMatricola})
 ` +
-                        `Periodo: dal ${dd} al ${da}
+                        `Periodo: ${periodoLabel}
 ` +
                         `Compilato da: ${r.compilatoDa || '-'}
 ` +
@@ -1987,12 +2349,22 @@
 `;
 
             (r.giornate || []).forEach(g => {
-                const dIt = (g.data || '').split('-').reverse().join('/');
+                const dShort = formatDataStampaBreve(g.data || '');
                 const gCantDesc = g.cantiereDescrizione || r.cantiereDescrizione;
                 const gLavDesc = g.lavorazioneDescrizione || r.lavorazioneDescrizione;
-                corpo += `- [${dIt}] ${gCantDesc} (${gLavDesc}) -> Ord: ${g.ordinarie}h | Str: ${g.straordinari}h`;
-                if (g.ferie > 0) corpo += ` | Ferie/Perm: ${g.ferie}h`;
-                if (g.cig > 0) corpo += ` | CIG: ${g.cig}h`;
+                const vO = Number(g.ordinarie || 0);
+                const vS = Number(g.straordinari || 0);
+                const vF = Number(g.ferie || 0);
+                const vP = Number(g.permessi || 0);
+                const vC = Number(g.cig || 0);
+                const vM = Number(g.malattia || 0);
+                tO += vO; tS += vS; tF += vF; tP += vP; tC += vC; tM += vM;
+
+                corpo += `- [${dShort}] ${gCantDesc} (${gLavDesc}) -> Ord: ${vO}h | Str: ${vS}h`;
+                if (vF > 0) corpo += ` | Ferie: ${vF}h`;
+                if (vP > 0) corpo += ` | Permessi: ${vP}h`;
+                if (vC > 0) corpo += ` | CIG: ${vC}h`;
+                if (vM > 0) corpo += ` | Malattia: ${vM}h`;
                 corpo += `
 `;
                 if (g.note) corpo += `  Note: ${g.note}
@@ -2002,17 +2374,21 @@
             corpo += `
 RIEPILOGO TOTALI:
 ` +
-                     `- Ore Ordinarie: ${r.totaleOrdinarie}h
+                     `- Ore Ordinarie: ${tO}h
 ` +
-                     `- Ore Straordinari: ${r.totaleStraordinari}h
+                     `- Ore Straordinarie: ${tS}h
 ` +
-                     `- Ferie / Permessi: ${r.totaleFerie}h
+                     `- Ferie: ${tF}h
 ` +
-                     `- CIG: ${r.totaleCig}h
+                     `- Permessi: ${tP}h
+` +
+                     `- CIG: ${tC}h
+` +
+                     `- Malattia: ${tM}h
 ` +
                      `=============================================`;
 
-            const subject = `Rapportino ${r.lavoratoreNome} (${dd} - ${da})`;
+            const subject = `Rapportino ${r.lavoratoreNome} (${periodoLabel})`;
             window.location.href = `mailto:${encodeURIComponent(inputEmail.trim())}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(corpo)}`;
         }
     </script>
